@@ -1,0 +1,15 @@
+{
+  "name": "EarthScope — Climate Time Machine",
+  "short_name": "EarthScope",
+  "description": "Live disasters, safe places, heat warnings and 45 years of NASA climate data — built for Bangladesh, open to the world.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#040a18",
+  "theme_color": "#040a18",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

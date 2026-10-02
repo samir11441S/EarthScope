@@ -1,0 +1,9 @@
+# Local build output and Cloudflare / vinext state — Vercel builds from source.
+node_modules
+.next
+dist
+.vinext
+.wrangler
+.sites-runtime
+tsconfig.tsbuildinfo
+.env*

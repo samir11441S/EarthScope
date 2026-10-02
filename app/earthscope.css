@@ -1,0 +1,133 @@
+/* EarthScope — deep-space navy + electric blue design layer (loaded last). */
+:root{
+  --es-bg:#030816;
+  --es-bg-2:#06102a;
+  --es-card:#08142e;
+  --es-card-2:#0a1a3c;
+  --es-line:#2f7dff2e;
+  --es-line-strong:#3ea2ff66;
+  --es-blue:#2f8cff;
+  --es-cyan:#38c8ff;
+  --es-glow:0 0 0 1px #3ea2ff1f,0 10px 40px -12px #1d6dff40;
+  --es-text:#eaf2ff;
+  --es-muted:#8ea3c4;
+}
+
+/* Space backdrop: soft nebula glows + a sparse starfield */
+body{background:var(--es-bg);color:var(--es-text)}
+main{background:
+  radial-gradient(900px 420px at 88% -60px,#1d5bff38,transparent 70%),
+  radial-gradient(700px 500px at 0% 30%,#0b2a6b26,transparent 70%),
+  radial-gradient(800px 600px at 100% 100%,#0a2a7022,transparent 70%),
+  var(--es-bg)!important;position:relative}
+main:before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.55;background-image:
+  radial-gradient(1px 1px at 12% 18%,#fff9,transparent 60%),radial-gradient(1px 1px at 72% 8%,#fffa,transparent 60%),
+  radial-gradient(1px 1px at 42% 32%,#cfe3ff88,transparent 60%),radial-gradient(1.5px 1.5px at 86% 26%,#fff,transparent 60%),
+  radial-gradient(1px 1px at 58% 14%,#fff8,transparent 60%),radial-gradient(1px 1px at 28% 6%,#bcd6ff99,transparent 60%),
+  radial-gradient(1px 1px at 94% 12%,#fff9,transparent 60%),radial-gradient(1px 1px at 64% 22%,#fff6,transparent 60%);
+  background-size:100% 520px;background-repeat:no-repeat}
+main>*{position:relative}
+
+/* Hero: planet horizon glow behind the page heading */
+.page-heading{position:relative;isolation:isolate}
+
+.page-heading h1{color:#fff;font-weight:700!important;letter-spacing:-1.6px!important}
+.h1-accent{background:linear-gradient(90deg,#38c8ff,#2f8cff 70%,#6aa8ff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 40px #2f8cff33}
+.eyebrow{color:#5cc2ff!important;font-weight:600;letter-spacing:1.8px}
+.eyebrow span{background:#38c8ff!important;box-shadow:0 0 8px #38c8ff}
+
+/* Sidebar */
+.app-sidebar [data-slot=sidebar-inner]{background:linear-gradient(180deg,#050d22,#040a1a 60%,#030816)!important}
+.app-sidebar [data-slot=sidebar-container]{border-right:1px solid #2f7dff24!important;box-shadow:1px 0 30px #1d5bff14}
+.brand>div{font-weight:800!important;letter-spacing:-1.2px!important;font-size:27px!important;color:#fff}
+.brand>div>b{font-weight:800;background:linear-gradient(90deg,#38c8ff,#2f8cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand-symbol{background:radial-gradient(circle at 35% 30%,#7fd0ff,#2f8cff 45%,#0b3fb8)!important;color:#fff!important;box-shadow:0 0 0 1px #8fd4ff55,0 0 22px #2f8cff88}
+.nav-caption{color:#7f9cc8!important}
+.nav-button{color:#a9bbd8!important}
+.nav-button:hover{background:#2f7dff12!important;color:#dceaff!important}
+.nav-button[data-active=true]{background:linear-gradient(90deg,#1f6fff40,#1f6fff12)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 0 0 1px #3ea2ff88,0 0 18px #2f8cff40,inset 0 0 12px #3ea2ff22}
+.nav-button[data-active=true]:before{background:#38c8ff!important;box-shadow:0 0 10px #38c8ff}
+.nav-button b{color:#7fd0ff;border-color:#3ea2ff66!important;background:#2f8cff14}
+.planet-note{background:linear-gradient(160deg,#0d2a66,#071433 70%)!important;border:1px solid #3ea2ff40!important;box-shadow:inset 0 0 40px #1d5bff22}
+
+/* Top bar */
+.topbar{border-bottom:1px solid #2f7dff22!important;background:linear-gradient(180deg,#040b1fcc,#040b1f66);backdrop-filter:blur(10px)}
+
+/* Cards & panels: navy glass with a glowing edge */
+.metric-card,.location-bar,.content-panel,.discovery-card,.insight-panel,.earth-panel{
+  background:linear-gradient(160deg,#0b1a3ccc,#071230e6 60%,#06102af2)!important;
+  border:1px solid var(--es-line)!important;box-shadow:var(--es-glow);border-radius:14px!important}
+.metric-card{transition:border-color .2s,box-shadow .2s,transform .2s}
+.metric-card:hover{border-color:var(--es-line-strong)!important;box-shadow:0 0 0 1px #3ea2ff33,0 14px 44px -12px #1d6dff66;transform:translateY(-1px)}
+.earth-panel{background:radial-gradient(ellipse at 50% 46%,#0d2350 0%,#071433 42%,#040a1c 78%)!important}
+.insight-panel{background:linear-gradient(150deg,#0e2456,#091a40 45%,#071433)!important;border-color:#3ea2ff40!important}
+.metric-main strong{color:#fff}
+
+/* Buttons */
+.lime-button{background:linear-gradient(90deg,#2f8cff,#38b6ff)!important;color:#fff!important;box-shadow:0 6px 24px -6px #2f8cffaa,inset 0 1px 0 #ffffff40}
+.lime-button:hover{filter:brightness(1.08)}
+.outline-button{border:1px solid #3ea2ff88!important;background:linear-gradient(180deg,#0f2654,#0a1a3c)!important;color:#fff!important;box-shadow:0 0 20px #2f8cff33}
+.outline-button:hover{box-shadow:0 0 26px #2f8cff66}
+.source-pill{border-color:#3ea2ff44!important;color:#8fd4ff!important;background:#2f8cff10}
+
+/* Inputs */
+input,select,textarea{color-scheme:dark}
+[data-slot=popover-content],[data-slot=select-content],[data-slot=dropdown-menu-content],[data-slot=dialog-content],[data-slot=sheet-content]{background:#071433!important;border-color:#2f7dff40!important}
+
+/* Satellite comparison & tools pick up the same accent */
+.sat-seg,.view-seg{background:#050d22!important;border-color:#2f7dff2e!important}
+.sat-seg button.on,.view-seg button.on{background:linear-gradient(90deg,#2f8cff,#38b6ff)!important;color:#fff!important;box-shadow:0 0 18px #2f8cff55}
+.sat-stats{background:linear-gradient(160deg,#0b1a3c,#071230)!important;border-color:#2f7dff2e!important}
+.stat-lead strong,.stat-scene b{color:#5cc2ff!important}
+
+/* Globe HUD */
+.nasa-telemetry-hud{background:#06122ecc!important;border:1px solid #3ea2ff40!important;box-shadow:0 0 30px #1d5bff26;backdrop-filter:blur(8px)}
+.globe-place>div{background:#071433e6!important;border:1px solid #3ea2ff66!important;box-shadow:0 0 18px #2f8cff44}
+
+/* Scrollbars */
+html{scrollbar-color:#1d4b99 #030816}
+.nav-content{scrollbar-width:none}
+::selection{background:#2f8cff66;color:#fff}
+
+.sparkline polyline{filter:drop-shadow(0 0 4px #38c8ff88)}
+.record-bars i{background:linear-gradient(180deg,#38c8ff,#1d5bff)!important;opacity:.45}
+.record-bars i:nth-child(3n){opacity:1}
+.record-bars i:nth-last-child(-n+4){opacity:.95;box-shadow:0 0 6px #38c8ff88}
+.report-actions{display:flex;align-items:center;gap:6px;margin-left:auto}
+.report-delete{background:none;border:1px solid #ff5a4f44;color:#ff8a7a;border-radius:7px;padding:8px;cursor:pointer}
+.report-delete:hover{background:#ff5a4f18}
+
+/* ---------- Hero: a real Earth horizon (NASA Blue Marble, Black Marble lights, NOAA-20 clouds) ---------- */
+.hero-sky{position:absolute!important;top:0;left:0;right:0;height:470px;overflow:hidden;pointer-events:none;z-index:0;
+  -webkit-mask-image:linear-gradient(180deg,#000 72%,transparent);mask-image:linear-gradient(180deg,#000 72%,transparent)}
+.workspace>*:not(.hero-sky){position:relative;z-index:1}
+/* Soft shade behind the heading so the text stays crisp over the planet. */
+.hero-sky:after{content:'';position:absolute;inset:0;background:radial-gradient(70% 85% at 0% 30%,rgba(3,8,22,.88) 0,rgba(3,8,22,.6) 45%,transparent 75%)}
+.hero-planet{position:absolute;width:3000px;height:3000px;left:calc(100% - 1400px);top:var(--hero-top,34px);border-radius:50%;overflow:hidden;background:#02060f;
+  box-shadow:0 0 0 1.5px #e3f5ff,0 -2px 10px 3px #a8dcffee,0 -8px 40px 12px #3f9bffcc,0 -30px 120px 40px #1d6dff88,0 -90px 260px 90px #1d4dff44}
+.hero-night,.hero-day,.hero-clouds{position:absolute;inset:0;background-repeat:repeat-x;background-size:6000px 3000px;will-change:background-position}
+.hero-night{background-image:url(/textures/earth-night.jpg);background-position:-1700px 0;filter:brightness(1.6) contrast(1.15);animation:hero-spin 1100s linear infinite}
+.hero-day,.hero-clouds{-webkit-mask-image:radial-gradient(circle at 53% 0%,#000 0,#000 6%,rgba(0,0,0,.5) 11%,transparent 18%);mask-image:radial-gradient(circle at 53% 0%,#000 0,#000 6%,rgba(0,0,0,.5) 11%,transparent 18%)}
+.hero-day{background-image:url(/textures/earth-day.jpg);background-position:-1700px 0;filter:saturate(1.15) brightness(1.05);animation:hero-spin 1100s linear infinite}
+.hero-clouds{background-image:url(/textures/earth-clouds.jpg);background-position:-1700px 0;mix-blend-mode:screen;opacity:.85;animation:hero-spin 700s linear infinite}
+.hero-rim{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle closest-side,transparent 96.6%,#5fb4ff55 98.6%,#bfe6ffcc 99.6%,#fff 100%),radial-gradient(circle closest-side,rgba(2,6,17,.72) 0,rgba(2,6,17,.62) 88%,rgba(2,6,17,.25) 94%,transparent 97.5%)}
+.hero-flare{position:absolute;right:-120px;top:calc(var(--hero-top,34px) - 122px);width:280px;height:250px;background:radial-gradient(circle,#ffffff 0,#f2fbff 4%,#bfe6ffaa 11%,#5aa9ff33 28%,transparent 62%);animation:hero-flare 7s ease-in-out infinite}
+.hero-flare:before{content:'';position:absolute;top:50%;right:40%;width:640px;height:2px;transform:translateY(-50%) rotate(-6deg);transform-origin:right center;background:linear-gradient(90deg,transparent,#a8dcff66 60%,#ffffffcc 96%,transparent)}
+.hero-stars{position:absolute;inset:0;background-image:
+  radial-gradient(1.4px 1.4px at 8% 22%,#fff,transparent 70%),radial-gradient(1px 1px at 18% 64%,#cfe3ff,transparent 70%),radial-gradient(1.6px 1.6px at 31% 12%,#fff,transparent 70%),
+  radial-gradient(1px 1px at 46% 40%,#e6f2ff,transparent 70%),radial-gradient(1.3px 1.3px at 57% 9%,#fff,transparent 70%),radial-gradient(1px 1px at 66% 30%,#cfe3ff,transparent 70%),
+  radial-gradient(1.5px 1.5px at 74% 6%,#fff,transparent 70%),radial-gradient(1px 1px at 84% 18%,#e6f2ff,transparent 70%),radial-gradient(1.2px 1.2px at 92% 34%,#fff,transparent 70%),
+  radial-gradient(1px 1px at 38% 78%,#cfe3ff,transparent 70%);animation:hero-twinkle 5s ease-in-out infinite alternate}
+@keyframes hero-spin{to{background-position-x:-7700px}}
+@keyframes hero-flare{0%,100%{opacity:.82;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+@keyframes hero-twinkle{from{opacity:.45}to{opacity:1}}
+/* Narrower screens: a smaller, more curved planet so the horizon stays clear of the heading text. */
+@media (max-width:1100px){
+  .hero-planet{width:1400px;height:1400px;left:calc(100% - 640px);top:var(--hero-top,118px)}
+  .hero-night,.hero-day,.hero-clouds{background-size:2800px 1400px;background-position:-800px 0}
+  .hero-night,.hero-day{animation-name:hero-spin-sm}.hero-clouds{animation-name:hero-spin-sm}
+  .hero-flare{top:calc(var(--hero-top,118px) - 108px);right:-135px;width:240px;height:220px}
+}
+@media (max-width:767px){.hero-sky{height:420px}.hero-planet{top:var(--hero-top,150px);left:calc(100% - 600px)}.hero-flare{top:calc(var(--hero-top,150px) - 104px)}}
+@keyframes hero-spin-sm{to{background-position-x:-3600px}}
+@media (prefers-reduced-motion:reduce){.hero-night,.hero-day,.hero-clouds,.hero-flare,.hero-stars{animation:none}}
