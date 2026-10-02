@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       };
       try {
         if (!aiConfigured()) await offline();
-        else if (!allow(clientKey(request), AI_PER_10_MIN, 10 * 60_000, AI_DAILY_CAP)) await offline("AI question limit reached for now — answered by the offline guide.");
+        else if (!(await allow(`ai:${clientKey(request)}`, AI_PER_10_MIN, 10 * 60_000, AI_DAILY_CAP))) await offline("AI question limit reached for now — answered by the offline guide.");
         else {
           let started = false;
           try {

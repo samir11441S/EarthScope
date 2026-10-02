@@ -131,3 +131,64 @@ html{scrollbar-color:#1d4b99 #030816}
 @media (max-width:767px){.hero-sky{height:420px}.hero-planet{top:var(--hero-top,150px);left:calc(100% - 600px)}.hero-flare{top:calc(var(--hero-top,150px) - 104px)}}
 @keyframes hero-spin-sm{to{background-position-x:-3600px}}
 @media (prefers-reduced-motion:reduce){.hero-night,.hero-day,.hero-clouds,.hero-flare,.hero-stars{animation:none}}
+
+/* ---------- Language switch + Bangla typography ---------- */
+.lang-switch{display:flex;align-items:center;gap:2px;background:#071433;border:1px solid #2f7dff33;border-radius:8px;padding:3px 3px 3px 8px;color:#7f9cc8}
+.lang-switch button{background:none;border:0;color:#a9bbd8;font-size:11.5px;font-weight:600;padding:5px 9px;border-radius:6px;cursor:pointer}
+.lang-switch button.on{background:linear-gradient(90deg,#2f8cff,#38b6ff);color:#fff}
+html[lang=bn] body,html[lang=bn] .page-heading h1,html[lang=bn] h2,html[lang=bn] h3,html[lang=bn] .brand>div>span{font-family:'Noto Sans Bengali','DM Sans',sans-serif}
+html[lang=bn] *{letter-spacing:0!important}
+html[lang=bn] .page-heading h1{font-size:30px;line-height:1.35}
+html[lang=bn] .eyebrow,html[lang=bn] .nav-caption{text-transform:none}
+
+/* ---------- Lazy-loading placeholders & error card ---------- */
+.lazy-loading{display:flex;align-items:center;justify-content:center;gap:10px;color:#8ea3c4;font-size:13px}
+.lazy-globe{position:absolute;inset:0}
+.lazy-panel{min-height:420px;border:1px solid #2f7dff2e;border-radius:14px;background:#06102a99}
+.lazy-card{min-height:160px}
+.lazy-overlay{position:fixed;inset:0;z-index:200;background:#030816ee}
+.lazy-hidden{display:none}
+.feature-error{display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 20px;border:1px solid #ff5a4f44;border-radius:14px;background:#1a0b14aa;color:#ffc9bf;text-align:center}
+
+/* ---------- Insight chart toggles (were inline styles) ---------- */
+.chart-toggles{display:flex;justify-content:space-between;align-items:center;width:100%;font-size:11px;margin-bottom:6px}
+.chart-toggles>div{display:flex;gap:6px;align-items:center}
+.chart-toggles span{color:#354357}
+.chart-toggle{background:none;border:0;padding:0;cursor:pointer;color:#5a7192;font-size:11px}
+.chart-toggle.on{font-weight:600}.chart-toggle.temp.on{color:#32a6ff}.chart-toggle.rain.on{color:#87b6d5}.chart-toggle.abs.on{color:#81c8ff}.chart-toggle.anom.on{color:#f4ad7e}
+
+/* ---------- Compare chart (were inline styles) ---------- */
+.compare-chart{background:#060d1b;border:1px solid #ffffff14;border-radius:10px;padding:20px 22px;margin-top:22px}
+.compare-chart-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.compare-chart-kicker{font-size:9px;letter-spacing:1px;color:#718cb2;font-weight:600}
+.compare-chart h3{font-size:17px;margin:4px 0 0;color:#dae2ec}
+.compare-chart-head p{font-size:12px;color:#7087a6;margin-top:4px}
+.compare-chart-legend{display:flex;gap:14px;font-size:12px;align-items:center;flex-wrap:wrap}
+.compare-chart-legend span{display:flex;align-items:center;gap:6px}
+.compare-chart-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.compare-chart-svg{width:100%;height:120px;overflow:visible}
+.compare-chart-ticks{display:flex;justify-content:space-between;color:#556b8a;font-size:10px;margin-top:5px}
+.compare-chart-note{font-size:10.5px;color:#556b8a;margin-top:8px}
+
+/* ---------- Sea level ---------- */
+.sea-panel{margin-top:20px}
+.sea-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px;align-items:start}
+.sea-chart svg{width:100%;height:auto;display:block}
+.sea-grid-line{stroke:#ffffff10}
+.sea-axis{font-size:10px;fill:#6f86ab}
+.sea-label{font-size:11px;fill:#b7c7e0}
+.sea-val{font-size:10.5px;fill:#eaf2ff;font-weight:600}
+.sea-note,.sea-small{font-size:11.5px;color:#7f9cc8;line-height:1.6;margin-top:8px}
+.sea-place{display:flex;flex-direction:column;gap:12px}
+.sea-elev{display:flex;gap:12px;align-items:center;border:1px solid #2f7dff33;border-radius:12px;padding:14px;background:#0a1a3c99;color:#8fd4ff}
+.sea-elev small{display:block;color:#8ea3c4;font-size:11px}
+.sea-elev strong{display:block;font-size:30px;color:#fff;font-family:Manrope,'Noto Sans Bengali',sans-serif}
+.sea-elev span{font-size:11px;color:#8ea3c4}
+.sea-verdict{border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin:0}
+.sea-verdict.very-low{background:#ff5a4f1a;border:1px solid #ff5a4f55;color:#ffd0c9}
+.sea-verdict.low{background:#ffa3471a;border:1px solid #ffa34755;color:#ffe0bf}
+.sea-verdict.moderate{background:#f2d16b14;border:1px solid #f2d16b44;color:#f5e6b8}
+.sea-verdict.high{background:#34c7591a;border:1px solid #34c75944;color:#c6f1d1}
+.sea-delta{display:flex;gap:8px;font-size:12px;color:#ffd28a;line-height:1.6;margin:0}
+.sea-delta svg{flex-shrink:0;margin-top:3px}
+@media (max-width:900px){.sea-grid{grid-template-columns:1fr}}
