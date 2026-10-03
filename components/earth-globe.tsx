@@ -5,6 +5,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { LocateFixed, Minus, Plus, RotateCcw, Activity, Thermometer, Snowflake, Wind, ChevronDown, ChevronUp } from "lucide-react";
 import { PLACES, type Layer, type Place } from "@/lib/climate";
 import { useI18n } from "@/lib/i18n";
+import { cloudDate } from "@/lib/clouds";
 import { getNasaGlobalData, globalWarmingRate, observedRate, SEA_ICE_REFERENCE, type NasaGlobalRecord } from "@/lib/nasa-global-data";
 
 /** Arctic amplification as a ratio of observed warming RATES over the whole record (not of one year's anomalies). */
@@ -244,7 +245,9 @@ export default function EarthGlobe({
     };
     const dayMap = loadTex("/textures/earth-day.jpg");
     const nightMap = loadTex("/textures/earth-night.jpg");
-    const cloudMap = loadTex("/textures/earth-clouds.jpg", false); // cloud-only mask (data, not colour)
+    // Real cloud cover from two days ago, rebuilt daily on the server; the bundled map is the fallback.
+    const cloudMap = loader.load(`/api/clouds?date=${cloudDate()}`, undefined, undefined, () => loader.load("/textures/earth-clouds.jpg", img => { cloudMap.image = img.image; cloudMap.needsUpdate = true; }));
+    cloudMap.anisotropy = maxAniso; // cloud-only mask (data, not colour)
     const textures = [dayMap, nightMap, cloudMap];
     // Clouds drift eastward around the planet; wrap seamlessly across the date line.
     dayMap.wrapS = cloudMap.wrapS = THREE.RepeatWrapping;

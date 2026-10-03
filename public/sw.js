@@ -1,6 +1,6 @@
 // EarthScope service worker: makes the app installable, keeps the last live data for offline use,
 // and shows alert notifications. Map tiles from NASA/Esri are not cached (too large).
-const VERSION = "earthscope-v3";
+const VERSION = "earthscope-v4";
 const SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/favicon.svg"];
 // Live data whose last good answer is useful offline.
 const LIVE_API = ["/api/disasters", "/api/heat", "/api/safe-places", "/api/climate"];
@@ -42,6 +42,7 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return; // tiles and third-party APIs go straight to the network
   if (request.mode === "navigate") { event.respondWith(networkFirst(request, "/")); return; }
   if (LIVE_API.some(p => url.pathname.startsWith(p))) { event.respondWith(networkFirst(request)); return; }
+  if (url.pathname === "/api/clouds") { event.respondWith(cacheFirst(request)); return; } // one immutable map per date
   if (url.pathname.startsWith("/api/")) return; // AI and other dynamic routes: never cached
   // Built assets have content-hashed names, so cache-first is safe; fonts, icons and data likewise.
   if (/\/(_next|assets)\/|\.(js|css|woff2?|png|jpe?g|svg|json|webmanifest)$/.test(url.pathname)) event.respondWith(cacheFirst(request));

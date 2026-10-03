@@ -1,4 +1,5 @@
 "use client";
+import { cloudDate } from "@/lib/clouds";
 import { useEffect, useRef } from "react";
 
 /** Decorative planet horizon behind every page heading, painted from NASA's own globe textures. */
@@ -34,7 +35,7 @@ export function HeroSky({ view, lang }: { view: string; lang: string }) {
   }, [view, lang]);
   return <div ref={ref} className="hero-sky" aria-hidden="true">
     <div className="hero-stars"/>
-    <div className="hero-planet"><div className="hero-night"/><div className="hero-day"/><div className="hero-clouds"/><div className="hero-rim"/></div>
+    <div className="hero-planet"><div className="hero-night"/><div className="hero-day"/><div className="hero-clouds" style={{ backgroundImage: `url(/api/clouds?date=${cloudDate()}), url(/textures/earth-clouds.jpg)` }}/><div className="hero-rim"/></div>
     <div className="hero-flare"/>
   </div>;
 }

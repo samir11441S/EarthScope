@@ -4,6 +4,14 @@
   "installCommand": "npm ci --no-audit --no-fund",
   "buildCommand": "next build",
   "functions": {
-    "app/api/**/route.ts": { "maxDuration": 60 }
-  }
+    "app/api/**/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/clouds/warm",
+      "schedule": "15 0 * * *"
+    }
+  ]
 }
