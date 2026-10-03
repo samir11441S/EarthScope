@@ -9,9 +9,9 @@
 .leaflet-tooltip-top:before{border-top-color:#080e1e}
 .leaflet-tooltip-left:before{border-left-color:#080e1e}.leaflet-tooltip-right:before{border-right-color:#080e1e}
 .map-toolbar{position:absolute;top:12px;left:12px;z-index:500;display:flex;gap:6px;flex-wrap:wrap}
-.map-toolbar button{display:inline-flex;align-items:center;gap:6px;background:#060d1be6;border:1px solid #ffffff1c;color:#a6b6cc;font-size:11px;padding:7px 10px;border-radius:7px;backdrop-filter:blur(6px)}
+.map-toolbar button{display:inline-flex;align-items:center;gap:6px;background:#060d1be6;border:1px solid #ffffff1c;color:#a6b6cc;font-size:11px;padding:7px 10px;border-radius:7px}
 .map-toolbar button.on{background:#32a6ff;color:#0a142b;border-color:#32a6ff;font-weight:600}
-.map-legend{position:absolute;left:12px;bottom:12px;z-index:500;background:#060d1be6;border:1px solid #ffffff1a;border-radius:8px;padding:8px 10px;font-size:10px;color:#a6b6cc;backdrop-filter:blur(6px)}
+.map-legend{position:absolute;left:12px;bottom:12px;z-index:500;background:#060d1be6;border:1px solid #ffffff1a;border-radius:8px;padding:8px 10px;font-size:10px;color:#a6b6cc}
 .map-error{position:absolute;top:56px;left:50%;transform:translateX(-50%);z-index:600;background:#2a1714ee;border:1px solid #f1887955;color:#ffc9bf;padding:9px 13px;border-radius:8px;font-size:12px;display:flex;align-items:center;gap:8px;max-width:90%}
 .map-error button{background:none;border:1px solid #ffc9bf66;color:#ffc9bf;border-radius:5px;padding:3px 8px;font-size:11px}
 .hz-check{display:flex;align-items:center;gap:7px;font-size:11px;color:#92a6c1;cursor:pointer;white-space:nowrap}
@@ -127,7 +127,7 @@
 .atlas-metrics button.on{background:#32a6ff;color:#0a142b;font-weight:600}
 .atlas-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px}
 .atlas-map{height:600px;width:100%}
-.atlas-year-badge{position:absolute;top:12px;right:12px;z-index:500;background:#060d1be6;border:1px solid #ffffff1c;border-radius:10px;padding:8px 14px;text-align:right;backdrop-filter:blur(6px);pointer-events:none}
+.atlas-year-badge{position:absolute;top:12px;right:12px;z-index:500;background:#060d1be6;border:1px solid #ffffff1c;border-radius:10px;padding:8px 14px;text-align:right;pointer-events:none}
 .atlas-year-badge span{display:block;font-size:30px;font-weight:500;color:#e7ecf3;letter-spacing:-1px;line-height:1.05}
 .atlas-year-badge small{font-size:10px;color:#92a6c1}
 .atlas-legend{width:260px;max-width:calc(100% - 90px)}
@@ -246,7 +246,7 @@
 .chat-stop{background:#ff5a4f!important;color:#fff!important}
 
 /* ---------- Flood map, population, heat, impact ---------- */
-.flood-panel{position:absolute;top:52px;left:12px;z-index:500;background:#060d1bee;border:1px solid #ffffff1c;border-radius:9px;padding:9px 10px;display:flex;flex-direction:column;gap:7px;max-width:290px;backdrop-filter:blur(6px);font-size:11px;color:#a6b6cc}
+.flood-panel{position:absolute;top:52px;left:12px;z-index:500;background:#060d1bee;border:1px solid #ffffff1c;border-radius:9px;padding:9px 10px;display:flex;flex-direction:column;gap:7px;max-width:290px;font-size:11px;color:#a6b6cc}
 .flood-panel .seg{display:flex;gap:3px;background:#040812;border-radius:6px;padding:3px}
 .flood-panel .seg button{flex:1;background:none;border:0;color:#92a6c1;font-size:10.5px;padding:5px 6px;border-radius:4px}
 .flood-panel .seg button.on{background:#32d2f5;color:#08222b;font-weight:600}
@@ -412,14 +412,14 @@
 .sat-image{isolation:isolate}
 .sat-image img:not(.sat-under){position:relative;z-index:1}
 .comparison-image .before-image{z-index:1}
-.lc-legend{position:absolute;left:12px;bottom:12px;z-index:4;max-width:min(62%,460px);display:flex;flex-wrap:wrap;gap:4px 11px;background:#050b1bd9;backdrop-filter:blur(6px);border:1px solid #ffffff1f;border-radius:9px;padding:7px 10px;font-size:10.5px;line-height:1.35;color:#dbe6f3;pointer-events:auto}
+.lc-legend{position:absolute;left:12px;bottom:12px;z-index:4;max-width:min(62%,460px);display:flex;flex-wrap:wrap;gap:4px 11px;background:#050b1bd9;border:1px solid #ffffff1f;border-radius:9px;padding:7px 10px;font-size:10.5px;line-height:1.35;color:#dbe6f3;pointer-events:auto}
 .lc-legend span{display:inline-flex;align-items:center;gap:5px;cursor:default}
 .lc-legend i{width:10px;height:10px;border-radius:2px;flex:none;box-shadow:0 0 0 1px #0006}
 @media (max-width:640px){.lc-legend{max-width:calc(100% - 24px);font-size:9.5px}}
 /* Land-cover time-lapse */
 .tl-frame{position:relative;z-index:1;width:100%;height:100%;image-rendering:pixelated;transition:opacity .25s}
 .tl-year{font-size:22px!important;font-weight:700;padding:6px 14px!important;font-variant-numeric:tabular-nums}
-.tl-controls{position:absolute;left:12px;right:12px;bottom:14px;z-index:5;display:flex;align-items:center;gap:12px;background:#050b1bd9;backdrop-filter:blur(6px);border:1px solid #ffffff1f;border-radius:999px;padding:6px 16px 6px 6px}
+.tl-controls{position:absolute;left:12px;right:12px;bottom:14px;z-index:5;display:flex;align-items:center;gap:12px;background:#050b1bd9;border:1px solid #ffffff1f;border-radius:999px;padding:6px 16px 6px 6px}
 .tl-controls button{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:linear-gradient(90deg,#2f8cff,#38b6ff);color:#fff;display:grid;place-items:center;cursor:pointer}
 .tl-controls>:last-child{flex:1}
 .tl-view .image-credit{bottom:64px}
@@ -488,8 +488,7 @@
 @media (max-width:1100px){.tlab-grid{grid-template-columns:1fr}.tl-panel{max-height:none}.tl-map{height:480px}}
 @media (max-width:640px){.tl-engine{grid-template-columns:1fr}.tl-map{height:380px}.tl-verdict b{font-size:16px}}
 .tl-link{width:100%;justify-content:center;margin:0 0 10px}
-/* Map overlays: no backdrop blur over Leaflet — some browsers paint the blurred box solid black. */
-.map-legend,.map-toolbar button,.atlas-year-badge,.lc-legend,.tl-controls,.flood-panel{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+/* Map overlays never use backdrop blur over Leaflet — some browsers paint the blurred box solid black. */
 .map-legend,.lc-legend{background:#060d1bf2}
 /* Trend Lab: analysed-area label and zoom button */
 .tl-area-label{overflow:visible}
