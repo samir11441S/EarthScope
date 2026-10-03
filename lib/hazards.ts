@@ -35,7 +35,7 @@ export interface HazardFeed {
   feeds: { name: string; ok: boolean; count: number }[];
 }
 
-export const HAZARD_META: Record<HazardType, { label: string; color: string; icon: string }> = {
+/* i18n */export const HAZARD_META: Record<HazardType, { label: string; color: string; icon: string }> = {
   earthquake: { label: "Earthquake", color: "#f0a35e", icon: "〰" },
   storm: { label: "Cyclone / storm", color: "#8fb8ff", icon: "🌀" },
   flood: { label: "Flood", color: "#52c7e0", icon: "🌊" },
@@ -47,14 +47,14 @@ export const HAZARD_META: Record<HazardType, { label: string; color: string; ico
   dust: { label: "Dust / haze", color: "#c9ae8a", icon: "🌫" },
   ice: { label: "Sea & lake ice", color: "#bfe6ff", icon: "❄" },
   other: { label: "Other", color: "#b9c4b0", icon: "•" },
-};
+};/* /i18n */
 
-export const SEVERITY_META: Record<Severity, { label: string; color: string; rank: number }> = {
+/* i18n */export const SEVERITY_META: Record<Severity, { label: string; color: string; rank: number }> = {
   red: { label: "Red alert", color: "#ff5a4f", rank: 3 },
   orange: { label: "Orange alert", color: "#ffa347", rank: 2 },
   green: { label: "Green alert", color: "#8fd27a", rank: 1 },
   info: { label: "Monitored", color: "#9fb0a0", rank: 0 },
-};
+};/* /i18n */
 
 /** Rough radius (km) of the area where strong effects are plausible. It is a screening aid, not a hazard model. */
 export function impactRadius(type: HazardType, severity: Severity, opts: { magnitude?: number; windKts?: number; acres?: number; bboxKm?: number } = {}) {
@@ -119,7 +119,7 @@ export function assessSafety(lat: number, lon: number, hazards: Hazard[]): Safet
 export const isInsideAnyZone = (lat: number, lon: number, hazards: Hazard[]) => hazards.some(h => h.type !== "ice" && insideNow(h, lat, lon));
 
 /** Short, widely published protective actions (Ready.gov / IFRC style). */
-export const GUIDANCE: Record<HazardType, string[]> = {
+/* i18n */export const GUIDANCE: Record<HazardType, string[]> = {
   earthquake: ["Drop, cover and hold on during shaking.", "After shaking, move to open ground away from buildings, walls and power lines.", "Expect aftershocks; do not re-enter damaged buildings."],
   storm: ["Go to a designated cyclone shelter or a strong building before winds arrive.", "Stay indoors away from windows until authorities say it is safe.", "Coastal and low-lying areas: evacuate early; storm surge is the biggest killer."],
   flood: ["Move to higher ground or an upper floor now.", "Never walk or drive through flood water — 15 cm of moving water can knock you down.", "Switch off electricity if water may enter your home."],
@@ -131,14 +131,14 @@ export const GUIDANCE: Record<HazardType, string[]> = {
   dust: ["Stay indoors with windows closed.", "Use a mask outdoors; people with asthma should keep medication ready.", "Drive slowly with headlights on in low visibility."],
   ice: ["Follow maritime notices for navigation hazards."],
   other: ["Follow instructions from local authorities."],
-};
+};/* /i18n */
 
 export type SafePlaceKind = "shelter" | "assembly" | "hospital" | "fire" | "community";
 export interface SafePlace { id: string; name: string; kind: SafePlaceKind; lat: number; lon: number }
-export const SAFE_PLACE_META: Record<SafePlaceKind, { label: string; color: string; icon: string }> = {
+/* i18n */export const SAFE_PLACE_META: Record<SafePlaceKind, { label: string; color: string; icon: string }> = {
   shelter: { label: "Emergency shelter", color: "#c6f27c", icon: "⛺" },
   assembly: { label: "Assembly point", color: "#9be7a4", icon: "⚑" },
   hospital: { label: "Hospital", color: "#7fd3ff", icon: "✚" },
   fire: { label: "Fire station", color: "#ffb36b", icon: "🚒" },
   community: { label: "Community centre", color: "#d7c8ff", icon: "⌂" },
-};
+};/* /i18n */

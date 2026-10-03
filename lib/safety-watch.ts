@@ -3,6 +3,10 @@
 // except the coordinates sent to EarthScope's own APIs to check them.
 import { assessSafety, HAZARD_META, type Hazard } from "./hazards";
 import { HEAT_META, type HeatDay } from "./heat";
+import { makeI18n } from "./i18n";
+
+type T = ReturnType<typeof makeI18n>["t"];
+const EN: T = makeI18n("en").t;
 
 export interface SavedPlace { id: string; name: string; lat: number; lon: number }
 export interface PlaceStatus {
@@ -32,22 +36,22 @@ export const setAlertsEnabled = (on: boolean) => write(ALERTS_KEY, on);
 export const loadPack = () => read<SafetyPack | null>(PACK_KEY, null);
 export const storePack = (p: SafetyPack) => write(PACK_KEY, p);
 
-const timeFrom = (iso: string) => { const h = Math.round((Date.parse(iso) - Date.now()) / 3_600_000); return h < 1 ? "within the hour" : h < 48 ? `in ~${h} h` : `in ~${Math.round(h / 24)} days`; };
+const timeFrom = (iso: string, t: T) => { const h = Math.round((Date.parse(iso) - Date.now()) / 3_600_000); return h < 1 ? t("within the hour") : h < 48 ? t("in ~{h} h", { h }) : t("in ~{d} days", { d: Math.round(h / 24) }); };
 
 /** Status of one saved place against current hazards and its heat outlook (worst of the next 3 days). */
-export function placeStatus(place: SavedPlace, hazards: Hazard[], heat?: HeatDay[]): PlaceStatus {
+export function placeStatus(place: SavedPlace, hazards: Hazard[], heat?: HeatDay[], t: T = EN): PlaceStatus {
   const a = assessSafety(place.lat, place.lon, hazards);
   const messages: string[] = [], keys: string[] = [];
-  for (const t of a.threats.slice(0, 3)) {
-    const name = `${t.hazard.title} (${HAZARD_META[t.hazard.type].label.toLowerCase()})`;
-    if (t.inside) { messages.push(`Inside the zone of ${name}.`); keys.push(`in:${t.hazard.id}`); }
-    else if (t.upcoming) { messages.push(`${name} is forecast to pass ${timeFrom(t.upcoming.eta)}.`); keys.push(`fc:${t.hazard.id}`); }
-    else { messages.push(`${name} is ${Math.round(t.distanceKm)} km away.`); keys.push(`near:${t.hazard.id}`); }
+  for (const th of a.threats.slice(0, 3)) {
+    const name = `${th.hazard.title} (${t(HAZARD_META[th.hazard.type].label).toLowerCase()})`;
+    if (th.inside) { messages.push(t("Inside the zone of {name}.", { name })); keys.push(`in:${th.hazard.id}`); }
+    else if (th.upcoming) { messages.push(t("{name} is forecast to pass {when}.", { name, when: timeFrom(th.upcoming.eta, t) })); keys.push(`fc:${th.hazard.id}`); }
+    else { messages.push(t("{name} is {km} km away.", { name, km: Math.round(th.distanceKm) })); keys.push(`near:${th.hazard.id}`); }
   }
   let level = a.level;
   const worst = heat?.slice(0, 3).reduce((x, y) => (y.heatIndexMax > x.heatIndexMax ? y : x), heat[0]);
   if (worst && HEAT_META[worst.level].rank >= 3) {
-    messages.push(`Dangerous heat forecast: heat index up to ${Math.round(worst.heatIndexMax)} °C (${HEAT_META[worst.level].label.toLowerCase()}).`);
+    messages.push(t("Dangerous heat forecast: heat index up to {v} °C ({level}).", { v: Math.round(worst.heatIndexMax), level: t(HEAT_META[worst.level].label).toLowerCase() }));
     keys.push(`heat:${worst.date}:${worst.level}`);
     if (level === "clear") level = "caution";
   }
@@ -82,17 +86,17 @@ export async function notify(title: string, body: string) {
 }
 
 /** Plain-text version of the pack, for sharing by SMS / messaging apps. */
-export function packText(p: SafetyPack) {
+export function packText(p: SafetyPack, t: T = EN, locale?: string) {
   return [
-    `EarthScope safety pack — ${p.label} (${p.lat.toFixed(3)}, ${p.lon.toFixed(3)})`,
-    `Saved ${new Date(p.savedAt).toLocaleString()}`,
-    `Status: ${p.status}`,
+    `${t("EarthScope safety pack")} — ${p.label} (${p.lat.toFixed(3)}, ${p.lon.toFixed(3)})`,
+    t("Saved {time}.", { time: new Date(p.savedAt).toLocaleString(locale) }),
+    `${t("Status:")} ${p.status}`,
     ...p.threats.map(t => `• ${t}`),
-    p.heat ? `Heat: ${p.heat}` : "",
-    p.shelters.length ? "Nearest safer places:" : "",
-    ...p.shelters.map(s => `• ${s.name} — ${s.kind}, ${s.distanceKm.toFixed(1)} km`),
-    "What to do:",
+    p.heat ? `${t("Heat:")} ${p.heat}` : "",
+    p.shelters.length ? t("Nearest safer places:") : "",
+    ...p.shelters.map(s => `• ${s.name} — ${t(s.kind)}, ${s.distanceKm.toFixed(1)} km`),
+    t("What to do:"),
     ...p.guidance.map(g => `• ${g}`),
-    "Emergency: 999 (Bangladesh) · disaster helpline 1090 · 112 (India/EU) · 911 (USA)",
+    t("Emergency: 999 (Bangladesh) · disaster helpline 1090 · 112 (India/EU) · 911 (USA)"),
   ].filter(Boolean).join("\n");
 }

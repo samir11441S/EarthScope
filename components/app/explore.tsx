@@ -11,7 +11,7 @@ import { ChartPath, Sparkline } from "./charts";
 import { EarthGlobe, SatelliteComparison } from "./lazy";
 import type { View } from "./nav";
 
-const LAYERS: Layer[] = ["Natural color", "Temperature", "Rainfall", "Vegetation", "Flood exposure"];
+/* i18n */const LAYERS: Layer[] = ["Natural color", "Temperature", "Rainfall", "Vegetation", "Flood exposure"];/* /i18n */
 
 function MetricCards({ data, year, warming, rainChange }: { data: ClimateData; year: number; warming: number; rainChange: number }) {
   const { t, n, y } = useI18n();
@@ -21,24 +21,31 @@ function MetricCards({ data, year, warming, rainChange }: { data: ClimateData; y
   const rainChangePct = scenario ? (current.rainfall / last.rainfall - 1) * 100 : delta.rainfall;
   const halfCi = (trend.tempCi95[1] - trend.tempCi95[0]) / 2;
   const sn = (v: number, d = 1) => { const s = signed(v, d); return s.startsWith("+") ? `+${n(Number(s.slice(1)), d)}` : n(Number(s), d); };
-  const pval = trendSummary(trend).match(/p [<=] [\d.]+/)?.[0] ?? "";
+  const pval = y(trendSummary(trend).match(/p [<=] [\d.]+/)?.[0] ?? "");
   const fewYears = <span className="muted-text">{t("Too few consistent years for a decade comparison")}</span>;
   return <div className="metrics-grid">
     <article className="metric-card"><div className="metric-label"><Thermometer size={16}/><span>{t("Mean temperature")}</span><span className="metric-year">{y(year)}</span></div><div className="metric-main"><strong>{n(current.temperature, 1)}<em>°C</em></strong><Sparkline values={data.annual.map(a => a.temperature)} color="#38c8ff" fill label={t("Annual temperature sparkline")}/></div><p>{tempChange === null ? fewYears : <><span className="warm-text">{sn(tempChange)}°C</span> {scenario ? t("relative to {year}", { year: y(last.year) }) : t("{a} vs {b}", { a: y(p.recent), b: y(p.base) })}</>}</p></article>
     <article className="metric-card"><div className="metric-label"><CloudRain size={16}/><span>{t("Annual precipitation")}</span><span className="metric-year">{y(year)}</span></div><div className="metric-main"><strong>{n(Math.round(current.rainfall))}<em>{t("mm")}</em></strong><Sparkline values={data.annual.map(a => a.rainfall)} color="#4f9dff" fill label={t("Annual rainfall sparkline")}/></div><p>{rainChangePct === null ? fewYears : <><span className="blue-text">{sn(rainChangePct)}%</span> {scenario ? t("relative to {year}", { year: y(last.year) }) : t("{a} vs {b}", { a: y(p.rainRecent), b: y(p.rainBase) })}</>}</p></article>
-    <article className="metric-card"><div className="metric-label"><TrendingUp size={16}/><span>{t("Trend detective")}</span><span className="metric-year">{y(trend.years[0])}–{y(String(trend.years[1]).slice(2))}</span></div><div className="metric-main"><strong>{trend.tempEnough ? sn(trend.tempSlopePerDecade, 2) : "—"}<em>°C/{t("dec")}</em></strong><Sparkline values={data.annual.filter(a => a.year >= trend.years[0]).map(a => a.temperature)} color={trend.tempSignificant ? "#32a6ff" : "#5f86c4"} label={t("Consistent-record temperature sparkline")}/></div><p title={trendSummary(trend)}><span className={trend.tempSignificant ? "lime-text" : "muted-text"}>{t(trendVerdict(trend))}</span> {trend.tempEnough ? `±${n(halfCi, 2)} (95% CI) · ${pval}` : ""}</p></article>
+    <article className="metric-card"><div className="metric-label"><TrendingUp size={16}/><span>{t("Trend detective")}</span><span className="metric-year">{y(trend.years[0])}–{y(String(trend.years[1]).slice(2))}</span></div><div className="metric-main"><strong>{trend.tempEnough ? sn(trend.tempSlopePerDecade, 2) : "—"}<em>°C/{t("dec")}</em></strong><Sparkline values={data.annual.filter(a => a.year >= trend.years[0]).map(a => a.temperature)} color={trend.tempSignificant ? "#32a6ff" : "#5f86c4"} label={t("Consistent-record temperature sparkline")}/></div><p title={trendSummary(trend)}><span className={trend.tempSignificant ? "lime-text" : "muted-text"}>{t(trendVerdict(trend))}</span> {trend.tempEnough ? `±${n(halfCi, 2)} (${t("95% CI")}) · ${pval}` : ""}</p></article>
     <article className="metric-card"><div className="metric-label"><History size={16}/><span>{t("Climate record")}</span><ShieldCheck size={14}/></div><div className="metric-main"><strong>{n(data.annual.length)}<em>{t("years")}</em></strong><div className="record-bars">{[30, 44, 35, 52, 43, 58, 50, 65, 56, 74, 69, 83].map((v, i) => <i key={i} style={{ height: `${v}%` }}/>)}</div></div><p><span className="lime-text">{y(data.annual[0].year)}–{y(last.year)}</span> {data.source === "NASA POWER" ? (p.breakNote ? t("consistent from {year}", { year: y(trend.years[0]) }) : t("NASA POWER observations")) : t("Illustrative example data")}</p></article>
   </div>;
 }
 
 function DataQualityNote({ data }: { data: ClimateData }) {
-  const { t, n, y, lang } = useI18n();
+  const { t, n, y } = useI18n();
   const h = homogeneity(data.annual);
   if (data.source !== "NASA POWER" || (!h.tempBreak && !h.rainBreak)) return null;
   const end = data.annual.at(-1)!.year;
-  if (lang === "en") return <div className="data-quality-note" role="note"><ShieldCheck size={16}/><p><strong>{t("Data quality check:")}</strong> {periodLabels(data).breakNote} Detected automatically with a two-phase regression break test (Lund &amp; Reeves 2002, 99% level).</p></div>;
-  const parts = [h.tempBreak && t("a {step} °C temperature step in {year}", { step: n(h.tempBreak.step, 1), year: y(h.tempBreak.year) }), h.rainBreak && t("a rainfall step in {year}", { year: y(h.rainBreak.year) })].filter(Boolean).join(t(" and "));
-  return <div className="data-quality-note" role="note"><ShieldCheck size={16}/><p><strong>{t("Data quality check:")}</strong> {t("The NASA POWER record here has {parts} — abrupt, non-climatic jumps from changes in the observations the reanalysis assimilates — so only {from}–{to} is used.", { parts, from: y(h.tempFrom), to: y(end) })}</p></div>;
+  const sn = (v: number, d: number) => `${v >= 0 ? "+" : "−"}${n(Math.abs(v), d)}`;
+  const rain = data.annual.filter(a => a.year >= h.rainFrom), rainMean = rain.reduce((s, a) => s + a.rainfall, 0) / Math.max(1, rain.length);
+  const parts = [
+    h.tempBreak && t("a {step} °C temperature step in {year}", { step: sn(h.tempBreak.step, 1), year: y(h.tempBreak.year) }),
+    h.rainBreak && t("a {pct}% rainfall step in {year}", { pct: sn((h.rainBreak.step / Math.max(1, rainMean)) * 100, 0), year: y(h.rainBreak.year) }),
+  ].filter(Boolean).join(t(" and "));
+  const used = h.rainFrom !== h.tempFrom
+    ? t("so only {a}–{end} is used for temperature and {b}–{end} for rainfall.", { a: y(h.tempFrom), b: y(h.rainFrom), end: y(end) })
+    : t("so only {a}–{end} is used.", { a: y(h.tempFrom), end: y(end) });
+  return <div className="data-quality-note" role="note"><ShieldCheck size={16}/><p><strong>{t("Data quality check:")}</strong> {t("The NASA POWER record here has {parts} — abrupt, non-climatic jumps typical of a change in the observations the MERRA-2 reanalysis assimilates —", { parts })} {used} {t("Detected automatically with a two-phase regression break test (Lund & Reeves 2002, 99% level).")}</p></div>;
 }
 
 export function ExploreView({ place, data, year, setYear, playing, setPlaying, layer, setLayer, warming, rainChange, onSelect, navigate, openStory }: {
@@ -49,7 +56,7 @@ export function ExploreView({ place, data, year, setYear, playing, setPlaying, l
   const [chartMetric, setChartMetric] = useState<"temperature" | "rainfall">("temperature");
   const [chartMode, setChartMode] = useState<"absolute" | "anomaly">("absolute");
   const delta = periodDelta(data), periods = periodLabels(data), trend = calculateTrend(data.annual), h = homogeneity(data.annual);
-  const pval = trendSummary(trend).match(/p [<=] [\d.]+/)?.[0] ?? "";
+  const pval = y(trendSummary(trend).match(/p [<=] [\d.]+/)?.[0] ?? "");
   const fullscreen = () => {
     const el = document.querySelector(".earth-panel");
     if (document.fullscreenElement) document.exitFullscreen();

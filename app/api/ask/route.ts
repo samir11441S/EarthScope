@@ -54,6 +54,7 @@ export async function POST(request: Request) {
           try {
             await streamAiAnswer(input.question.trim(), history, {
               place: input.place, data: input.data, year: input.year, warming: input.warming, rainChange: input.rainChange,
+              lang: (input as { lang?: unknown }).lang === "bn" ? "bn" : "en",
             }, e => { if (e.type === "text") started = true; emit(e); }, request.signal);
           } catch (err) {
             if (request.signal.aborted) return;

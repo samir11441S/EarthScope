@@ -8,6 +8,7 @@ import { geometryBBox, pointInGeometry, polygonsOf, representativePoint, ringBBo
 import { PERIOD_YEARS, RECORD_END, RECORD_START, type Place } from "@/lib/climate";
 import { detectBreak, MIN_RAIN_STEP_FRACTION, MIN_TEMP_STEP } from "@/lib/homogeneity";
 import { formatP, linearTrend } from "@/lib/stats";
+import { useI18n } from "@/lib/i18n";
 
 const FIRST = RECORD_START, LAST = RECORD_END;
 /** Bump when the shape or period of cached data changes, so browsers never reuse old files. */
@@ -23,6 +24,9 @@ type Level =
   | { kind: "state"; iso: string; country: string; parentId: string; name: string };
 type Metric = "tempAnomaly" | "temp" | "rainAnomaly" | "rain";
 
+// Metric labels are translated at render time.
+/* i18n */// "Temperature change" "vs first consistent decade" "Mean temperature" "annual mean" "Rainfall change" "Annual rainfall" "mm / year"
+/* /i18n */
 const METRICS: Record<Metric, { label: string; short: string; stops: [number, string][]; fmt: (v: number) => string }> = {
   tempAnomaly: { label: "Temperature change", short: "vs first consistent decade", stops: [[-1.5, "#2166ac"], [-0.6, "#67a9cf"], [0, "#f2efe6"], [0.6, "#f4a582"], [1.2, "#d6604d"], [2, "#8e0b25"]], fmt: v => `${v >= 0 ? "+" : ""}${v.toFixed(2)} °C` },
   temp: { label: "Mean temperature", short: "annual mean", stops: [[-20, "#313695"], [-5, "#4575b4"], [5, "#91bfdb"], [15, "#fee090"], [22, "#fc8d59"], [28, "#d73027"], [32, "#7f0000"]], fmt: v => `${v.toFixed(1)} °C` },
@@ -146,6 +150,7 @@ function aggregateRegion(f: RegionFeature, cells: Cell[]): Series | null {
 
 // ---- component --------------------------------------------------------------
 export default function ClimateAtlas({ onOpenPlace }: { onOpenPlace: (p: Place) => void }) {
+  const { t, n, y } = useI18n();
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Leaflet.Map | null>(null), lRef = useRef<L | null>(null);
   const baseRef = useRef<Leaflet.LayerGroup | null>(null), geoRef = useRef<Leaflet.GeoJSON | null>(null);
@@ -164,8 +169,8 @@ export default function ClimateAtlas({ onOpenPlace }: { onOpenPlace: (p: Place) 
   const year = YEARS[yearIdx];
 
   // live refs so Leaflet callbacks always read current state
-  const live = useRef({ values, metric, yearIdx, smooth, selected, opacity: 0.72 });
-  useEffect(() => { live.current = { values, metric, yearIdx, smooth, selected, opacity: basemap === "satellite" ? 0.42 : 0.72 }; });
+  const live = useRef({ values, metric, yearIdx, smooth, selected, opacity: 0.72, t });
+  useEffect(() => { live.current = { values, metric, yearIdx, smooth, selected, opacity: basemap === "satellite" ? 0.42 : 0.72, t }; });
 
   useEffect(() => {
     let cancelled = false;
@@ -209,7 +214,7 @@ export default function ClimateAtlas({ onOpenPlace }: { onOpenPlace: (p: Place) 
           setRegions(geo);
           setValues(new Map(Object.entries(climate.countries).map(([k, v]) => [k, { t: v.t, p: v.p, cells: v.points }])));
         } catch {
-          if (!cancelled) setError("World climate layer could not be loaded.");
+          if (!cancelled) setError(live.current.t("World climate layer could not be loaded."));
         } finally {
           if (!cancelled) setProgress(null);
         }
@@ -225,7 +230,7 @@ export default function ClimateAtlas({ onOpenPlace }: { onOpenPlace: (p: Place) 
         fc = j;
       } catch (e) {
         if (cancelled) return;
-        setError(e instanceof Error && e.message ? e.message : "Boundaries could not be loaded.");
+        setError(e instanceof Error && e.message ? e.message : live.current.t("Boundaries could not be loaded."));
         setProgress(null);
         return;
       }
@@ -259,7 +264,7 @@ export default function ClimateAtlas({ onOpenPlace }: { onOpenPlace: (p: Place) 
       }));
       if (cancelled) return;
       setProgress(null);
-      if (failed.size) setError(`${failed.size} of ${allTiles.length} NASA POWER tiles did not load; some regions are grey.`);
+      if (failed.size) setError(live.current.t("{a} of {b} NASA POWER tiles did not load; some regions are grey.", { a: failed.size, b: allTiles.length }));
     };
     run();
     return () => { cancelled = true; };
@@ -284,11 +289,11 @@ export default function ClimateAtlas({ onOpenPlace }: { onOpenPlace: (p: Place) 
       onEachFeature: (f, lyr) => {
         const rf = f as unknown as RegionFeature;
         lyr.bindTooltip(() => {
-          const { values: vals, metric: m, yearIdx: yi, smooth: sm } = live.current;
+          const { values: vals, metric: m, yearIdx: yi, smooth: sm, t: tr } = live.current;
           const v = valueAt(vals.get(rf.properties.id), m, yi, sm);
           const s = vals.get(rf.properties.id), q = s ? quality(s) : null, from = q ? (m.startsWith("temp") ? q.tFrom : q.pFrom) : FIRST;
-          const why = !s ? "loading…" : YEARS[yi] < from ? `inconsistent source data before ${from}` : "not enough consistent years";
-          return `<b>${escapeHtml(rf.properties.name)}</b><br>${METRICS[m].label} ${YEARS[yi]}: <b>${v === null ? why : METRICS[m].fmt(v)}</b>`;
+          const why = !s ? tr("loading…") : YEARS[yi] < from ? tr("inconsistent source data before {year}", { year: from }) : tr("not enough consistent years");
+          return `<b>${escapeHtml(rf.properties.name)}</b><br>${tr(METRICS[m].label)} ${YEARS[yi]}: <b>${v === null ? why : METRICS[m].fmt(v)}</b>`;
         }, { sticky: true, className: "atlas-tip" });
         lyr.on({
           mouseover: e => (e.target as Leaflet.Path).setStyle({ weight: 2, color: "#32a6ff" }),
@@ -343,7 +348,7 @@ export default function ClimateAtlas({ onOpenPlace }: { onOpenPlace: (p: Place) 
   }, [values]);
   const stripeSeries = selSeries ?? viewSeries;
 
-  const unitName = level.kind === "world" ? "countries" : level.kind === "country" ? (regions?.meta?.canonical ? `${regions.meta.canonical.toLowerCase()}s` : "states / provinces") : "districts";
+  const unitName = level.kind === "world" ? t("countries") : level.kind === "country" ? (regions?.meta?.canonical ? t(`${regions.meta.canonical.toLowerCase()}s`) : t("states / provinces")) : t("districts");
   const loadedCount = values.size;
 
   const drill = () => {
@@ -364,85 +369,85 @@ export default function ClimateAtlas({ onOpenPlace }: { onOpenPlace: (p: Place) 
   return (
     <section className="atlas">
       <div className="atlas-top">
-        <nav className="atlas-crumbs" aria-label="Map level">
-          <button onClick={() => setLevel({ kind: "world" })} className={level.kind === "world" ? "on" : ""}><Globe2 size={14} /> World</button>
+        <nav className="atlas-crumbs" aria-label={t("Map level")}>
+          <button onClick={() => setLevel({ kind: "world" })} className={level.kind === "world" ? "on" : ""}><Globe2 size={14} /> {t("World")}</button>
           {level.kind !== "world" && <><ChevronRight size={13} /><button className={level.kind === "country" ? "on" : ""} onClick={() => level.kind === "state" && setLevel({ kind: "country", iso: level.iso, name: level.country })}>{level.kind === "country" ? level.name : level.country}</button></>}
           {level.kind === "state" && <><ChevronRight size={13} /><button className="on">{level.name}</button></>}
         </nav>
         <div className="atlas-metrics" role="tablist">
-          {(Object.keys(METRICS) as Metric[]).map(m => <button key={m} role="tab" aria-selected={metric === m} className={metric === m ? "on" : ""} onClick={() => setMetric(m)}>{METRICS[m].label}</button>)}
+          {(Object.keys(METRICS) as Metric[]).map(m => <button key={m} role="tab" aria-selected={metric === m} className={metric === m ? "on" : ""} onClick={() => setMetric(m)}>{t(METRICS[m].label)}</button>)}
         </div>
       </div>
 
       <div className="atlas-grid">
         <div className="atlas-map-card">
-          <div ref={el} className="atlas-map" role="application" aria-label={`Climate map of ${unitName}`} />
-          <div className="atlas-year-badge"><span>{year}</span><small>{METRICS[metric].label}{smooth ? " · 5-yr mean" : ""}</small></div>
+          <div ref={el} className="atlas-map" role="application" aria-label={t("Climate map of {units}", { units: unitName })} />
+          <div className="atlas-year-badge"><span>{y(year)}</span><small>{t(METRICS[metric].label)}{smooth ? ` · ${t("5-yr mean")}` : ""}</small></div>
           <div className="map-toolbar">
-            {(["relief", "satellite", "night"] as Basemap[]).map(b => <button key={b} className={basemap === b ? "on" : ""} onClick={() => setBasemap(b)}>{b === "relief" ? "Blue Marble" : b === "satellite" ? `MODIS ${year}` : "Night lights"}</button>)}
+            {(["relief", "satellite", "night"] as Basemap[]).map(b => <button key={b} className={basemap === b ? "on" : ""} onClick={() => setBasemap(b)}>{b === "relief" ? "Blue Marble" : b === "satellite" ? `MODIS ${y(year)}` : t("Night lights")}</button>)}
           </div>
           <div className="map-legend atlas-legend">
             <div className="legend-bar" style={{ background: `linear-gradient(90deg, ${legend.map(([, c]) => c).join(",")})` }} />
-            <div className="legend-labels"><span>{METRICS[metric].fmt(legend[0][0])}</span><span>{METRICS[metric].short}</span><span>{METRICS[metric].fmt(legend[legend.length - 1][0])}</span></div>
+            <div className="legend-labels"><span>{METRICS[metric].fmt(legend[0][0])}</span><span>{t(METRICS[metric].short)}</span><span>{METRICS[metric].fmt(legend[legend.length - 1][0])}</span></div>
           </div>
-          {progress && <div className="atlas-progress"><LoaderCircle className="spin" size={15} /> {progress.total > 1 ? <>Averaging NASA POWER grid cells… {progress.done}/{progress.total} tiles · {loadedCount}/{features.length} {unitName}</> : "Loading map…"}<i style={{ width: `${(progress.done / Math.max(1, progress.total)) * 100}%` }} /></div>}
+          {progress && <div className="atlas-progress"><LoaderCircle className="spin" size={15} /> {progress.total > 1 ? <>{t("Averaging NASA POWER grid cells…")} {t("{a}/{b} tiles", { a: n(progress.done), b: n(progress.total) })} · {n(loadedCount)}/{n(features.length)} {unitName}</> : t("Loading map…")}<i style={{ width: `${(progress.done / Math.max(1, progress.total)) * 100}%` }} /></div>}
           {error && <div className="map-error"><TriangleAlert size={16} /> {error}</div>}
         </div>
 
         <aside className="atlas-panel">
           {selFeature ? (
             <div className="atlas-region">
-              <span className="eyebrow">{level.kind === "world" ? "COUNTRY" : level.kind === "country" ? (regions?.meta?.canonical || "STATE / PROVINCE").toUpperCase() : "DISTRICT"}</span>
+              <span className="eyebrow">{level.kind === "world" ? t("COUNTRY") : level.kind === "country" ? (regions?.meta?.canonical ? t(regions.meta.canonical).toUpperCase() : t("STATE / PROVINCE")) : t("DISTRICT")}</span>
               <h2>{selFeature.properties.name}</h2>
-              <div className="atlas-value"><strong>{selValue === null ? "—" : METRICS[metric].fmt(selValue)}</strong><span>{METRICS[metric].label.toLowerCase()} in {year}</span></div>
+              <div className="atlas-value"><strong>{selValue === null ? "—" : METRICS[metric].fmt(selValue)}</strong><span>{t("{metric} in {year}", { metric: t(METRICS[metric].label).toLowerCase(), year: y(year) })}</span></div>
               {selSeries && <div className="atlas-facts">
-                <div><span>Temperature trend{regionTrend(selSeries, "t") ? ` ${regionTrend(selSeries, "t")!.from}–${LAST}` : ""}</span><strong>{(() => { const t = regionTrend(selSeries, "t"); return t === null ? "too few years" : `${t.perDecade >= 0 ? "+" : ""}${t.perDecade.toFixed(2)} °C/dec${t.significant ? "" : " · n.s."}`; })()}</strong></div>
-                <div><span>Rainfall trend{regionTrend(selSeries, "p") ? ` ${regionTrend(selSeries, "p")!.from}–${LAST}` : ""}</span><strong>{(() => { const t = regionTrend(selSeries, "p"); return t === null ? "too few years" : `${t.perDecade >= 0 ? "+" : ""}${Math.round(t.perDecade)} mm/dec${t.significant ? "" : " · n.s."}`; })()}</strong></div>
-                <div><span>{year} mean temp.</span><strong>{selSeries.t[yearIdx]?.toFixed(1) ?? "—"} °C</strong></div>
-                <div><span>{year} rainfall</span><strong>{selSeries.p[yearIdx]?.toLocaleString("en-US") ?? "—"} mm</strong></div>
+                <div><span>{t("Temperature trend")}{regionTrend(selSeries, "t") ? ` ${regionTrend(selSeries, "t")!.from}–${LAST}` : ""}</span><strong>{(() => { const tr = regionTrend(selSeries, "t"); return tr === null ? t("too few years") : `${tr.perDecade >= 0 ? "+" : ""}${n(tr.perDecade, 2)} ${t("°C/dec")}${tr.significant ? "" : ` · ${t("n.s.")}`}`; })()}</strong></div>
+                <div><span>{t("Rainfall trend")}{regionTrend(selSeries, "p") ? ` ${regionTrend(selSeries, "p")!.from}–${LAST}` : ""}</span><strong>{(() => { const tr = regionTrend(selSeries, "p"); return tr === null ? t("too few years") : `${tr.perDecade >= 0 ? "+" : ""}${n(Math.round(tr.perDecade))} ${t("mm/dec")}${tr.significant ? "" : ` · ${t("n.s.")}`}`; })()}</strong></div>
+                <div><span>{t("{year} mean temp.", { year: y(year) })}</span><strong>{selSeries.t[yearIdx] != null ? n(selSeries.t[yearIdx]!, 1) : "—"} °C</strong></div>
+                <div><span>{t("{year} rainfall", { year: y(year) })}</span><strong>{selSeries.p[yearIdx] != null ? n(selSeries.p[yearIdx]!) : "—"} mm</strong></div>
               </div>}
-              {selSeries && (quality(selSeries).tBreak || quality(selSeries).pBreak) && <p className="atlas-break">Data break detected{quality(selSeries).tBreak ? ` in ${quality(selSeries).tBreak} (temperature)` : ""}{quality(selSeries).pBreak ? `${quality(selSeries).tBreak ? " and" : ""} in ${quality(selSeries).pBreak} (rainfall)` : ""} — earlier years are greyed out and excluded from trends.</p>}
-              {selSeries && <p className="atlas-cells">{level.kind === "world" ? `Averaged from ${selSeries.cells} NASA POWER sample points.` : `Area-average of ${selSeries.cells} NASA POWER grid cell${selSeries.cells === 1 ? "" : "s"} (0.5° × 0.625°).`}</p>}
+              {selSeries && (quality(selSeries).tBreak || quality(selSeries).pBreak) && <p className="atlas-break">{t("Data break detected")}{quality(selSeries).tBreak ? ` ${t("in {year} (temperature)", { year: y(quality(selSeries).tBreak!) })}` : ""}{quality(selSeries).pBreak ? `${quality(selSeries).tBreak ? ` ${t("and")}` : ""} ${t("in {year} (rainfall)", { year: y(quality(selSeries).pBreak!) })}` : ""} — {t("earlier years are greyed out and excluded from trends.")}</p>}
+              {selSeries && <p className="atlas-cells">{level.kind === "world" ? t("Averaged from {n} NASA POWER sample points.", { n: n(selSeries.cells ?? 0) }) : (selSeries.cells === 1 ? t("Area-average of {n} NASA POWER grid cell (0.5° × 0.625°).", { n: n(1) }) : t("Area-average of {n} NASA POWER grid cells (0.5° × 0.625°).", { n: n(selSeries.cells ?? 0) }))}</p>}
               <div className="atlas-actions">
-                {level.kind !== "state" && <button className="lime-button" onClick={drill}><Layers3 size={15} /> {level.kind === "world" ? "Show states / provinces" : "Show districts"}</button>}
-                <button className="outline-button" onClick={openInExplorer}><MapPin size={15} /> Open in Earth explorer <ArrowUpRight size={14} /></button>
+                {level.kind !== "state" && <button className="lime-button" onClick={drill}><Layers3 size={15} /> {level.kind === "world" ? t("Show states / provinces") : t("Show districts")}</button>}
+                <button className="outline-button" onClick={openInExplorer}><MapPin size={15} /> {t("Open in Earth explorer")} <ArrowUpRight size={14} /></button>
               </div>
             </div>
           ) : (
             <div className="atlas-region atlas-hint">
-              <span className="eyebrow">{level.kind === "world" ? "THE WHOLE PLANET" : level.kind === "country" ? level.name.toUpperCase() : level.name.toUpperCase()}</span>
-              <h2>{level.kind === "world" ? "Pick a country" : level.kind === "country" ? `Pick a ${(regions?.meta?.canonical || "state").toLowerCase()}` : "Pick a district"}</h2>
-              <p>Click any shape to see its story. Press play to watch {features.length ? features.length.toLocaleString("en-US") : "the"} {unitName} change year by year, {FIRST}–{LAST}.</p>
+              <span className="eyebrow">{level.kind === "world" ? t("THE WHOLE PLANET") : level.kind === "country" ? level.name.toUpperCase() : level.name.toUpperCase()}</span>
+              <h2>{level.kind === "world" ? t("Pick a country") : level.kind === "country" ? t("Pick a region") : t("Pick a district")}</h2>
+              <p>{t("Click any shape to see its story. Press play to watch {count} {units} change year by year, {from}–{to}.", { count: features.length ? n(features.length) : "", units: unitName, from: y(FIRST), to: y(LAST) })}</p>
             </div>
           )}
 
           <div className="atlas-rank">
-            <h4>{isTemp ? "Fastest warming" : "Biggest rainfall trend"} <small>significant first · regions with ≥ {MIN_COMPARE} consistent years</small></h4>
+            <h4>{isTemp ? t("Fastest warming") : t("Biggest rainfall trend")} <small>{t("significant first · regions with ≥ {n} consistent years", { n: n(MIN_COMPARE) })}</small></h4>
             {ranking.slice(0, 6).map((r, i) => (
               <button key={r.f.id} className={selected === r.f.properties.id ? "on" : ""} onClick={() => { setSelected(r.f.properties.id); const b = geometryBBox(r.f.geometry); mapRef.current?.fitBounds([[b[1], b[0]], [b[3], b[2]]], { maxZoom: level.kind === "world" ? 5 : 9, padding: [40, 40] }); }}>
-                <span>{i + 1}</span><em>{r.f.properties.name}</em><strong className={r.significant ? "" : "muted-text"} title={`${r.from}–${LAST} · ${formatP(r.p)}`}>{isTemp ? `${r.score >= 0 ? "+" : ""}${r.score.toFixed(2)}°/dec` : `${r.score >= 0 ? "+" : ""}${r.score.toFixed(1)}%/dec`}{r.significant ? "" : " n.s."}</strong>
+                <span>{n(i + 1)}</span><em>{r.f.properties.name}</em><strong className={r.significant ? "" : "muted-text"} title={`${r.from}–${LAST} · ${formatP(r.p)}`}>{isTemp ? `${r.score >= 0 ? "+" : ""}${n(r.score, 2)}°/${t("dec")}` : `${r.score >= 0 ? "+" : ""}${n(r.score, 1)}%/${t("dec")}`}{r.significant ? "" : ` ${t("n.s.")}`}</strong>
               </button>
             ))}
-            {!ranking.length && <p className="hz-empty">{progress ? "Waiting for NASA data…" : "No data yet."}</p>}
+            {!ranking.length && <p className="hz-empty">{progress ? t("Waiting for NASA data…") : t("No data yet.")}</p>}
           </div>
         </aside>
       </div>
 
       <div className="atlas-timeline content-panel">
-        <button className="play-button" onClick={() => { if (yearIdx >= N - 1) setYearIdx(0); setPlaying(p => !p); }} aria-label={playing ? "Pause" : "Play years"}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
+        <button className="play-button" onClick={() => { if (yearIdx >= N - 1) setYearIdx(0); setPlaying(p => !p); }} aria-label={playing ? t("Pause") : t("Play years")}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
         <div className="timeline-body">
-          <div className="stripes" aria-label={`Climate stripes for ${selFeature?.properties.name ?? "this view"}`}>
-            {YEARS.map((y, i) => {
+          <div className="stripes" aria-label={t("Climate stripes for {name}", { name: selFeature?.properties.name ?? t("this view") })}>
+            {YEARS.map((yr, i) => {
               const v = valueAt(stripeSeries, isTemp ? "tempAnomaly" : "rainAnomaly", i, false);
-              return <button key={y} title={`${y}: ${v === null ? "no data" : METRICS[isTemp ? "tempAnomaly" : "rainAnomaly"].fmt(v)}`} className={i === yearIdx ? "on" : ""} style={{ background: colorFor(v, METRICS[isTemp ? "tempAnomaly" : "rainAnomaly"].stops) } as CSSProperties} onClick={() => { setPlaying(false); setYearIdx(i); }} />;
+              return <button key={yr} title={`${yr}: ${v === null ? t("no data") : METRICS[isTemp ? "tempAnomaly" : "rainAnomaly"].fmt(v)}`} className={i === yearIdx ? "on" : ""} style={{ background: colorFor(v, METRICS[isTemp ? "tempAnomaly" : "rainAnomaly"].stops) } as CSSProperties} onClick={() => { setPlaying(false); setYearIdx(i); }} />;
             })}
           </div>
-          <Slider aria-label="Map year" min={0} max={N - 1} step={1} value={[yearIdx]} onValueChange={v => { setPlaying(false); setYearIdx(v[0]); }} />
-          <div className="timeline-labels"><span>{FIRST}</span><span>{selFeature ? `${selFeature.properties.name} climate stripes` : `Average of all ${unitName} shown`}</span><span>{LAST}</span></div>
+          <Slider aria-label={t("Map year")} min={0} max={N - 1} step={1} value={[yearIdx]} onValueChange={v => { setPlaying(false); setYearIdx(v[0]); }} />
+          <div className="timeline-labels"><span>{y(FIRST)}</span><span>{selFeature ? t("{name} climate stripes", { name: selFeature.properties.name }) : t("Average of all {units} shown", { units: unitName })}</span><span>{y(LAST)}</span></div>
         </div>
-        <label className="hz-check"><input type="checkbox" checked={smooth} onChange={e => setSmooth(e.target.checked)} /> 5-year smoothing</label>
+        <label className="hz-check"><input type="checkbox" checked={smooth} onChange={e => setSmooth(e.target.checked)} /> {t("5-year smoothing")}</label>
       </div>
-      <p className="hz-disclaimer">Data: NASA POWER monthly MERRA-2 reanalysis, {FIRST}–{LAST}. Each region is tested for abrupt non-climatic steps (Lund & Reeves two-phase regression, 99%); years before a step are shown grey and excluded. Changes are relative to each region&apos;s first consistent decade; trends marked n.s. are not statistically significant (p ≥ 0.05). {level.kind === "world" ? "Country values are averages of up to 8 sample points." : "Values are averages of the NASA grid cells inside each boundary."} Boundaries: {level.kind === "world" ? "Natural Earth (public domain)" : `${regions?.meta?.source ?? "geoBoundaries"}${regions?.meta?.license ? `, ${regions.meta.license}` : ""}`}. Boundaries are for display only and do not imply any position on disputed territory.</p>
+      <p className="hz-disclaimer">{t("Data: NASA POWER monthly MERRA-2 reanalysis, {from}–{to}. Each region is tested for abrupt non-climatic steps (Lund & Reeves two-phase regression, 99%); years before a step are shown grey and excluded. Changes are relative to each region's first consistent decade; trends marked n.s. are not statistically significant (p ≥ 0.05).", { from: y(FIRST), to: y(LAST) })} {level.kind === "world" ? t("Country values are averages of up to 8 sample points.") : t("Values are averages of the NASA grid cells inside each boundary.")} {t("Boundaries:")} {level.kind === "world" ? t("Natural Earth (public domain)") : `${regions?.meta?.source ?? "geoBoundaries"}${regions?.meta?.license ? `, ${regions.meta.license}` : ""}`}. {t("Boundaries are for display only and do not imply any position on disputed territory.")}</p>
     </section>
   );
 }

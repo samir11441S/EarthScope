@@ -23,7 +23,7 @@ export type AskEvent =
   | { type: "error"; message: string };
 
 export interface AskTurn { role: "user" | "assistant"; text: string }
-export interface AskContext { place: Place; data: ClimateData; year: number; warming: number; rainChange: number }
+export interface AskContext { place: Place; data: ClimateData; year: number; warming: number; rainChange: number; lang?: "en" | "bn" }
 
 const MODEL = process.env.ASK_EARTH_MODEL || "claude-opus-5-5";
 // Conversational Q&A over pre-computed data does well at low effort; raise via env if needed.
@@ -47,7 +47,7 @@ How to answer
 - Years after ${GLOBAL_LAST} on the global record are a labelled trend extrapolation, not a forecast. For future climate, refer to the IPCC AR6 values in the context. The user's "scenario" settings are a what-if sensitivity test, not a projection.
 - For questions about current disasters, safety, evacuation or shelters, call the tools. EarthScope is not an official warning service: always tell people to follow their national disaster authority (Bangladesh: Department of Disaster Management and Bangladesh Meteorological Department), and give the emergency number (Bangladesh 999; India and the EU 112; USA 911) when someone may be in danger. If a person seems to be in immediate danger, lead with the protective action and the emergency number.
 - Stay on climate, weather, Earth science, natural hazards, adaptation and EarthScope's data. Politely decline unrelated requests.
-- Reply in the language the user writes in (for example বাংলা if they write in Bangla).
+- Reply in the language the user writes in (for example বাংলা if they write in Bangla). When the language is unclear (a place name, numbers), use interface_language from the context ("bn" = Bangla, with Bangla digits).
 
 Format (the chat renders only this subset)
 - Usually 60–220 words. Lead with the direct answer.
@@ -104,6 +104,7 @@ function contextBlock(ctx: AskContext) {
   const scenario = observation(ctx.data, SCENARIO_END, ctx.warming, ctx.rainChange);
   const pack = {
     today_utc: new Date().toISOString().slice(0, 10),
+    interface_language: ctx.lang ?? "en",
     selected_place: summarizeRecord(ctx.place, ctx.data),
     selected_year: ctx.year,
     user_scenario: `What-if test chosen by the user: ${ctx.warming >= 0 ? "+" : ""}${ctx.warming.toFixed(1)} °C and ${ctx.rainChange >= 0 ? "+" : ""}${ctx.rainChange}% rainfall by ${SCENARIO_END}, applied linearly to the ${RECORD_END} value → ${SCENARIO_END}: ${scenario.temperature.toFixed(1)} °C, ${Math.round(scenario.rainfall)} mm. Not a projection.`,

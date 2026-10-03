@@ -5,7 +5,7 @@ import type { Place } from "@/lib/climate";
 import { useI18n } from "@/lib/i18n";
 import { AR6_GMSL, OBSERVED_GMSL, SHOWN_SSPS, elevationBand, inBengalDelta, type Ssp } from "@/lib/sea-level";
 
-const SSP_LABEL: Record<Ssp, string> = { "SSP1-1.9": "Very low emissions", "SSP1-2.6": "Low emissions", "SSP2-4.5": "Intermediate emissions", "SSP3-7.0": "High emissions", "SSP5-8.5": "Very high emissions" };
+/* i18n */const SSP_LABEL: Record<Ssp, string> = { "SSP1-1.9": "Very low emissions", "SSP1-2.6": "Low emissions", "SSP2-4.5": "Intermediate emissions", "SSP3-7.0": "High emissions", "SSP5-8.5": "Very high emissions" };/* /i18n */
 const SSP_COLOR: Record<Ssp, string> = { "SSP1-1.9": "#5fd4ff", "SSP1-2.6": "#38b6ff", "SSP2-4.5": "#f2b84b", "SSP3-7.0": "#ff8a5c", "SSP5-8.5": "#ff5a4f" };
 
 export default function SeaLevelPanel({ place }: { place: Place }) {
@@ -51,11 +51,11 @@ export default function SeaLevelPanel({ place }: { place: Place }) {
             : <div><small>{t("Ground height at {place}", { place: place.name })}</small><strong>{n(m, 0)} m</strong><span>{t("above mean sea level (90 m elevation model)")}</span></div>}
         </div>
         {band && <p className={`sea-verdict ${band}`}>{t({
-          "very-low": "Very low-lying: even 0.5 m of sea-level rise makes storm surges and high tides reach much further inland. Embankments and drainage matter most here.",
+          /* i18n */"very-low": "Very low-lying: even 0.5 m of sea-level rise makes storm surges and high tides reach much further inland. Embankments and drainage matter most here.",
           low: "Low-lying: higher seas push storm surges, tidal flooding and salt water further inland, and slow river drainage during floods.",
           moderate: "Moderately elevated: direct flooding from the sea is unlikely, but river backwater, waterlogging and salt in water supplies can still reach here.",
           high: "Well above sea level: sea-level rise is not a direct flooding threat here; it matters through coastal supply chains and migration.",
-        }[band])}</p>}
+        }[band]/* /i18n */)}</p>}
         {delta && <p className="sea-delta"><ShieldAlert size={15}/> {t("In the Ganges–Brahmaputra–Meghna delta the land itself is sinking in many places (often several mm a year), so the local rise relative to the land is larger than the global numbers (Becker et al., 2020).")}</p>}
         <p className="sea-small">{t("These are global averages. Local sea level also depends on land movement, ocean currents and tides. Treat the numbers as a guide, not a flood map.")}</p>
       </div>

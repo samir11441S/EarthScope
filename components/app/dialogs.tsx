@@ -5,19 +5,19 @@ import { RECORD_END, RECORD_START, SCENARIO_END, climateStory, imageUrl, type Cl
 import { climateStoryBn } from "@/lib/climate-bn";
 import { useI18n } from "@/lib/i18n";
 
-const SOURCES = [
+/* i18n */const SOURCES = [
   { href: "https://power.larc.nasa.gov/docs/methodology/", icon: Thermometer, title: "NASA POWER / MERRA-2", text: "Annual temperature at 2 meters and precipitation, {from}–{to}. Gridded reanalysis estimates (about 50 km cells), not city weather stations. Each series is tested for abrupt non-climatic steps — reanalyses jump when the observations they assimilate change — and years before a step are excluded. The record is cross-checked against ECMWF ERA5." },
   { href: "https://nasa-gibs.github.io/gibs-api-docs/", icon: Layers3, title: "NASA GIBS: MODIS, VIIRS, Landsat, Sentinel-2", text: "Land cover, vegetation (NDVI), land-surface temperature, aerosols and like-for-like imagery. The 3D globe uses NASA Blue Marble, VIIRS Black Marble city lights and real VIIRS clouds, refreshed daily." },
   { href: "https://eonet.gsfc.nasa.gov/", icon: Siren, title: "Live disasters: NASA EONET · GDACS · USGS", text: "Open natural events from NASA EONET, alert levels from GDACS (UN / European Commission) and M4.5+ earthquakes from USGS, refreshed every 5 minutes. Impact zones are simple distance estimates and “safer places” are OpenStreetMap shelters, hospitals and assembly points. Not an official warning system." },
   { href: "https://open-meteo.com/en/docs/air-quality-api", icon: Wind, title: "Air quality: CAMS forecast + NASA aerosols", text: "Hourly PM2.5, PM10, ozone and NO₂ with a 5-day forecast from the Copernicus Atmosphere Monitoring Service (via Open-Meteo), and NASA MODIS aerosol optical depth on the map." },
   { href: "https://www.ipcc.ch/report/ar6/wg1/", icon: Waves, title: "Sea level: IPCC AR6", text: "Global mean sea-level projections for low, intermediate and very high emissions (AR6 WGI Table 9.9), with ground height from the Copernicus 90 m elevation model." },
   { href: "https://www.geoboundaries.org/", icon: Earth, title: "Climate atlas: NASA POWER grid + boundaries", text: "State and district values average every NASA POWER grid cell (0.5° × 0.625°) inside the boundary, weighted by latitude. Boundaries: Natural Earth and geoBoundaries." },
-];
-const NOTES = [
+];/* /i18n */
+/* i18n */const NOTES = [
   { icon: TrendingUp, title: "Honest trend statistics", text: "Trends are least-squares slopes with 95% confidence intervals and an autocorrelation-corrected t-test (Santer et al. 2000). A change is called “warming” or “cooling” only when p < 0.05; otherwise EarthScope says there is no clear trend yet. The statistics are covered by automated tests." },
   { icon: FlaskConical, title: "Transparent scenarios", text: "User-selected changes are applied linearly from {to} to {end}. These are educational scenarios, not CMIP6 output; the globe’s years after {to} extend observed trends and are flagged as such." },
   { icon: Sparkles, title: "Ask Earth", text: "Answers are written by an AI model (Claude, or a free open model) only from EarthScope’s NASA data and live feeds, with sources cited. When AI is unavailable, a rule-based guide answers from the same data." },
-];
+];/* /i18n */
 
 export function DataDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { t, y } = useI18n();

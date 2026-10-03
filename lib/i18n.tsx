@@ -30,7 +30,8 @@ export function makeI18n(lang: UiLang, setLang: (l: UiLang) => void = () => {}):
   const bn = lang === "bn";
   return {
     lang, setLang,
-    t: (en, vars) => fill(bn ? BN[en] ?? en : en, vars),
+    // In Bangla, numeric placeholders are written with Bangla digits.
+    t: (en, vars) => bn ? fill(BN[en] ?? en, vars && Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, typeof v === "number" ? toBnDigits(String(v)) : v]))) : fill(en, vars),
     n: (v, d = 0) => v.toLocaleString(bn ? "bn-BD" : "en-US", { minimumFractionDigits: d, maximumFractionDigits: d }),
     y: v => (bn ? toBnDigits(String(v)) : String(v)),
   };

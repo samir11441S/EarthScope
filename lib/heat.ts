@@ -38,17 +38,17 @@ export function bmdClass(tmax: number): HeatDay["bmd"] {
   return tmax >= 42 ? "very-severe" : tmax >= 40 ? "severe" : tmax >= 38 ? "moderate" : tmax >= 36 ? "mild" : "none";
 }
 
-export const HEAT_META: Record<HeatLevel, { label: string; color: string; rank: number }> = {
+/* i18n */export const HEAT_META: Record<HeatLevel, { label: string; color: string; rank: number }> = {
   none: { label: "No heat stress", color: "#8fd27a", rank: 0 },
   caution: { label: "Caution", color: "#f2d16b", rank: 1 },
   "extreme-caution": { label: "Extreme caution", color: "#ffa347", rank: 2 },
   danger: { label: "Danger", color: "#ff5a4f", rank: 3 },
   "extreme-danger": { label: "Extreme danger", color: "#b3134a", rank: 4 },
-};
+};/* /i18n */
 
-export const BMD_LABEL: Record<HeatDay["bmd"], string> = {
+/* i18n */export const BMD_LABEL: Record<HeatDay["bmd"], string> = {
   none: "No heatwave", mild: "Mild heatwave", moderate: "Moderate heatwave", severe: "Severe heatwave", "very-severe": "Very severe heatwave",
-};
+};/* /i18n */
 
 /** Is this outlook worth warning about? Danger-level humid heat or a BMD moderate-or-worse heatwave. */
 export const heatAlert = (d: HeatDay) => HEAT_META[d.level].rank >= 3 || ["moderate", "severe", "very-severe"].includes(d.bmd);

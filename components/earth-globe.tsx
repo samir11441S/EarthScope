@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { LocateFixed, Minus, Plus, RotateCcw, Activity, Thermometer, Snowflake, Wind, ChevronDown, ChevronUp } from "lucide-react";
 import { PLACES, type Layer, type Place } from "@/lib/climate";
+import { useI18n } from "@/lib/i18n";
 import { getNasaGlobalData, globalWarmingRate, observedRate, SEA_ICE_REFERENCE, type NasaGlobalRecord } from "@/lib/nasa-global-data";
 
 /** Arctic amplification as a ratio of observed warming RATES over the whole record (not of one year's anomalies). */
@@ -173,6 +174,7 @@ export default function EarthGlobe({
   year: number;
   onSelect: (p: Place) => void;
 }) {
+  const { t, n, y } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const label = useRef<HTMLDivElement>(null);
   const [hudOpen, setHudOpen] = useState(true);
@@ -683,13 +685,13 @@ export default function EarthGlobe({
           <div className="nasa-telemetry-header">
             <div className="telemetry-badge">
               <Activity size={12} />
-              <span>NASA DATA HUD</span>
-              <span className="telemetry-year-tag">{year}</span>
+              <span>{t("NASA DATA HUD")}</span>
+              <span className="telemetry-year-tag">{y(year)}</span>
             </div>
             <button
               className="telemetry-toggle-btn"
               onClick={() => setHudOpen((v) => !v)}
-              aria-label={hudOpen ? "Minimize NASA telemetry" : "Expand NASA telemetry"}
+              aria-label={hudOpen ? t("Minimize NASA telemetry") : t("Expand NASA telemetry")}
             >
               {hudOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
@@ -700,43 +702,43 @@ export default function EarthGlobe({
               <div className="nasa-telemetry-grid">
                 <div className="telemetry-item">
                   <span className="telemetry-label">
-                    <Thermometer size={12} /> Global Anomaly
+                    <Thermometer size={12} /> {t("Global Anomaly")}
                   </span>
                   <strong className={nasaData.globalTempAnomaly >= 1.5 ? "telemetry-hot" : "telemetry-warm"}>
-                    +{nasaData.globalTempAnomaly.toFixed(2)}°C
+                    +{n(nasaData.globalTempAnomaly, 2)}°C
                   </strong>
                 </div>
 
                 <div className="telemetry-item">
                   <span className="telemetry-label">
-                    <Snowflake size={12} /> Arctic Warming
+                    <Snowflake size={12} /> {t("Arctic Warming")}
                   </span>
                   <strong className="telemetry-arctic">
-                    +{nasaData.arcticTempAnomaly.toFixed(2)}°C
+                    +{n(nasaData.arcticTempAnomaly, 2)}°C
                     <small className="amplification-badge" title={`Arctic warming rate ${ARCTIC_RATE.perDecade.toFixed(2)} vs global ${GLOBAL_RATE.perDecade.toFixed(2)} °C/decade, ${ARCTIC_RATE.from}–${ARCTIC_RATE.to}`}>
-                      {AMPLIFICATION.toFixed(1)}× rate
+                      {t("{x}× rate", { x: n(AMPLIFICATION, 1) })}
                     </small>
                   </strong>
                 </div>
 
                 <div className="telemetry-item">
                   <span className="telemetry-label">
-                    <Wind size={12} /> Sea Ice Extent
+                    <Wind size={12} /> {t("Sea Ice Extent")}
                   </span>
                   <strong>
-                    {nasaData.seaIceExtent.toFixed(2)} <small>M km²</small>
+                    {n(nasaData.seaIceExtent, 2)} <small>{t("M km²")}</small>
                     <span className="telemetry-delta">
-                      ({(((nasaData.seaIceExtent - SEA_ICE_REFERENCE.extent) / SEA_ICE_REFERENCE.extent) * 100).toFixed(0)}% vs {SEA_ICE_REFERENCE.year})
+                      ({n(((nasaData.seaIceExtent - SEA_ICE_REFERENCE.extent) / SEA_ICE_REFERENCE.extent) * 100)}% {t("vs")} {y(SEA_ICE_REFERENCE.year)})
                     </span>
                   </strong>
                 </div>
 
                 <div className="telemetry-item">
                   <span className="telemetry-label">
-                    <Activity size={12} /> Atmospheric CO₂
+                    <Activity size={12} /> {t("Atmospheric CO₂")}
                   </span>
                   <strong className="telemetry-co2">
-                    {nasaData.co2Ppm.toFixed(1)} <small>ppm</small>
+                    {n(nasaData.co2Ppm, 1)} <small>ppm</small>
                   </strong>
                 </div>
               </div>
@@ -757,9 +759,9 @@ export default function EarthGlobe({
               {layer === "Rainfall" && (
                 <div className="telemetry-scale">
                   <div className="scale-labels">
-                    <span>Dry subtropics</span>
-                    <span>Climatological pattern</span>
-                    <span>Wet tropics</span>
+                    <span>{t("Dry subtropics")}</span>
+                    <span>{t("Climatological pattern")}</span>
+                    <span>{t("Wet tropics")}</span>
                   </div>
                   <div className="scale-bar rainfall-scale" />
                 </div>
@@ -768,16 +770,16 @@ export default function EarthGlobe({
               {layer === "Vegetation" && (
                 <div className="telemetry-scale">
                   <div className="scale-labels">
-                    <span>Arid Browning</span>
-                    <span>Baseline</span>
-                    <span>Arctic Greening</span>
+                    <span>{t("Arid Browning")}</span>
+                    <span>{t("Baseline")}</span>
+                    <span>{t("Arctic Greening")}</span>
                   </div>
                   <div className="scale-bar vegetation-scale" />
                 </div>
               )}
 
               <div className="telemetry-source">
-                <span>{nasaData.projected ? "⚠ " : ""}{nasaData.source}</span>
+                <span>{nasaData.projected ? "⚠ " : ""}{t(nasaData.source)}</span>
               </div>
             </>
           )}
@@ -787,8 +789,8 @@ export default function EarthGlobe({
       {failed && (
         <div className="globe-fallback">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/textures/earth-day.jpg" alt="NASA Blue Marble Earth texture" />
-          <p>Interactive 3D is unavailable on this device. Use the location picker to explore.</p>
+          <img src="/textures/earth-day.jpg" alt={t("NASA Blue Marble Earth texture")} />
+          <p>{t("Interactive 3D is unavailable on this device. Use the location picker to explore.")}</p>
         </div>
       )}
 
@@ -804,20 +806,20 @@ export default function EarthGlobe({
       )}
 
       <div className="globe-tools">
-        <button aria-label="Zoom in" onClick={() => api.current?.zoom(-0.4)}>
+        <button aria-label={t("Zoom in")} onClick={() => api.current?.zoom(-0.4)}>
           <Plus size={17} />
         </button>
-        <button aria-label="Zoom out" onClick={() => api.current?.zoom(0.4)}>
+        <button aria-label={t("Zoom out")} onClick={() => api.current?.zoom(0.4)}>
           <Minus size={17} />
         </button>
         <i />
-        <button aria-label="Center on selected place" onClick={() => api.current?.focus(place)}>
+        <button aria-label={t("Center on selected place")} onClick={() => api.current?.focus(place)}>
           <LocateFixed size={17} />
         </button>
       </div>
 
       <div className="globe-instructions">
-        <RotateCcw size={12} /> Drag to explore <span>·</span> Click a place
+        <RotateCcw size={12} /> {t("Drag to explore")} <span>·</span> {t("Click a place")}
       </div>
     </div>
   );

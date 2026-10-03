@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CircleHelp, Columns2, Layers3, LoaderCircle, ScanSearch, Sparkles, SplitSquareHorizontal, Waypoints } from "lucide-react";
 import { RangeControl as Slider } from "./range-control";
 import type { Place } from "@/lib/climate";
+import { useI18n } from "@/lib/i18n";
 import { compareLandCover, compareNdvi, COVER_META, LANDCOVER_YEARS, ndviComposites, type CoverChange, type CoverGroup, type NdviChange } from "@/lib/earth-change";
 
 // Satellite comparison, rebuilt for like-for-like accuracy:
@@ -16,19 +17,19 @@ export type ImageryKind = "hls" | "false721";
 type View = "swipe" | "side" | "changes";
 export type Scene = { date: string; sensor: "S30" | "L30" | "MODIS"; score: number };
 
-const ZOOMS = [
+/* i18n */const ZOOMS = [
   { label: "City", km: 45, span: 0.4 },
   { label: "Metro", km: 90, span: 0.8 },
   { label: "Region", km: 240, span: 2.2 },
 ];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];/* /i18n */
 const SENSOR_NAME = { S30: "Sentinel-2", L30: "Landsat 8/9", MODIS: "Terra MODIS" } as const;
 const SIZE_ANALYSIS = 512;
 
 const nowYear = () => new Date().getUTCFullYear();
 const today = () => new Date().toISOString().slice(0, 10);
 const addDays = (d: string, n: number) => new Date(Date.parse(d) + n * 86_400_000).toISOString().slice(0, 10);
-const fmtDate = (d: string) => new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const fmtDate = (d: string, lang = "en") => new Date(d + "T00:00:00Z").toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 /** Latest year whose given month (day 15) is already in the past. */
 const latestYearFor = (month: number) => (Date.now() > Date.UTC(nowYear(), month - 1, 28) ? nowYear() : nowYear() - 1);
 const range = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
@@ -165,10 +166,11 @@ function Picture({ src, alt, enhance = false, pixelated = false, waiting }: { sr
   const url = shown && shown.from === src ? shown.url : null;
   const ok = !!url && state?.url === url && state.ok;
   const failed = !!url && state?.url === url && !state.ok;
+  const { t } = useI18n();
   return <div className="sat-image">
     {/* eslint-disable-next-line @next/next/no-img-element */}
     {url && <img key={url} src={url} alt={alt} onLoad={() => setState({ url, ok: true })} onError={() => setState({ url, ok: false })} style={{ opacity: ok ? 1 : 0, imageRendering: pixelated ? "pixelated" : undefined }} />}
-    {!ok && <div className="image-status">{failed ? <><Layers3 size={25} /><span>No image available for this date.</span><small>Try another year or month; satellite coverage varies.</small></> : <><LoaderCircle className="spin" size={22} /><span>{src ? "Loading NASA imagery…" : waiting ?? "Finding the clearest satellite pass…"}</span></>}</div>}
+    {!ok && <div className="image-status">{failed ? <><Layers3 size={25} /><span>{t("No image available for this date.")}</span><small>{t("Try another year or month; satellite coverage varies.")}</small></> : <><LoaderCircle className="spin" size={22} /><span>{src ? t("Loading NASA imagery…") : waiting ?? t("Finding the clearest satellite pass…")}</span></>}</div>}
   </div>;
 }
 
@@ -186,6 +188,7 @@ function Overlay({ data }: { data: ImageData | null }) {
 const signedPts = (v: number, d = 1) => `${v > 0 ? "+" : ""}${v.toFixed(d)}`;
 
 export default function SatelliteComparison({ place, large = false }: { place: Place; large?: boolean }) {
+  const { t, n, y, lang } = useI18n();
   const [mode, setMode] = useState<Mode>(large ? "landcover" : "imagery");
   const [kind, setKind] = useState<ImageryKind>("hls");
   const [view, setView] = useState<View>("swipe");
@@ -229,7 +232,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   useEffect(() => {
     if (mode !== "vegetation") return;
     let active = true;
-    if (!compA.length || !compB.length) { queueMicrotask(() => active && setNdvi({ key: nKey, value: null, error: "No NDVI composites for that month yet — pick an earlier month or year." })); return () => { active = false; }; }
+    if (!compA.length || !compB.length) { queueMicrotask(() => active && setNdvi({ key: nKey, value: null, error: t("No NDVI composites for that month yet — pick an earlier month or year.") })); return () => { active = false; }; }
     Promise.all([Promise.all(ndviUrls(compA).map(u => pixels(u, SIZE_ANALYSIS))), Promise.all(ndviUrls(compB).map(u => pixels(u, SIZE_ANALYSIS)))])
       .then(([a, b]) => active && setNdvi({ key: nKey, value: compareNdvi(a, b) }))
       .catch(() => active && setNdvi({ key: nKey, value: null, error: "NASA NDVI tiles could not be loaded." }));
@@ -259,13 +262,13 @@ export default function SatelliteComparison({ place, large = false }: { place: P
 
   // ---- What to show -----------------------------------------------------------
   let srcA: string | null, srcB: string | null, labelA: string, labelB: string, credit: string;
-  if (mode === "landcover") { srcA = lcA; srcB = lcB; labelA = `${ya} land cover`; labelB = `${yb} land cover`; credit = "NASA MODIS MCD12Q1 land cover (IGBP), 500 m"; }
-  else if (mode === "vegetation") { srcA = compA[0] ? ndviUrls([compA[0]])[0] : null; srcB = compB[0] ? ndviUrls([compB[0]])[0] : null; labelA = `${MONTHS[month - 1]} ${ya} NDVI`; labelB = `${MONTHS[month - 1]} ${yb} NDVI`; credit = "NASA MODIS MOD13Q1 NDVI, 250 m, 16-day"; }
+  if (mode === "landcover") { srcA = lcA; srcB = lcB; labelA = t("{year} land cover", { year: y(ya) }); labelB = t("{year} land cover", { year: y(yb) }); credit = t("NASA MODIS MCD12Q1 land cover (IGBP), 500 m"); }
+  else if (mode === "vegetation") { srcA = compA[0] ? ndviUrls([compA[0]])[0] : null; srcB = compB[0] ? ndviUrls([compB[0]])[0] : null; labelA = `${y(ya)} ${t(MONTHS[month - 1])} NDVI`; labelB = `${y(yb)} ${t(MONTHS[month - 1])} NDVI`; credit = t("NASA MODIS MOD13Q1 NDVI, 250 m, 16-day"); }
   else {
     srcA = sceneUrl(sc?.a); srcB = sceneUrl(sc?.b);
-    labelA = sc?.a ? `${sc.a.date} · ${SENSOR_NAME[sc.a.sensor]}` : `${MONTHS[month - 1]} ${ya}`;
-    labelB = sc?.b ? `${sc.b.date} · ${SENSOR_NAME[sc.b.sensor]}` : `${MONTHS[month - 1]} ${yb}`;
-    credit = kind === "hls" ? "NASA HLS (Landsat + Sentinel-2), 30 m" : "NASA Terra MODIS bands 7-2-1, 250 m";
+    labelA = sc?.a ? `${sc.a.date} · ${SENSOR_NAME[sc.a.sensor]}` : `${y(ya)} ${t(MONTHS[month - 1])}`;
+    labelB = sc?.b ? `${sc.b.date} · ${SENSOR_NAME[sc.b.sensor]}` : `${y(yb)} ${t(MONTHS[month - 1])}`;
+    credit = kind === "hls" ? t("NASA HLS (Landsat + Sentinel-2), 30 m") : t("NASA Terra MODIS bands 7-2-1, 250 m");
   }
   const pixelated = mode === "landcover";
   const overlay = mode === "landcover" ? coverNow?.value?.overlay ?? null : mode === "vegetation" ? ndviNow?.value?.overlay ?? null : null;
@@ -286,8 +289,8 @@ export default function SatelliteComparison({ place, large = false }: { place: P
         <div className="comparison-image">
           <Picture src={srcB} pixelated={pixelated} alt={`${place.name}, ${labelB}`} />
           <div className="change-dim" /><Overlay data={overlay} />
-          <span className="image-date before-date">Change {ya} → {yb}</span>
-          {!overlay && <div className="image-status overlay-wait"><LoaderCircle className="spin" size={20} /><span>Measuring change…</span></div>}
+          <span className="image-date before-date">{t("Change {a} → {b}", { a: y(ya), b: y(yb) })}</span>
+          {!overlay && <div className="image-status overlay-wait"><LoaderCircle className="spin" size={20} /><span>{t("Measuring change…")}</span></div>}
         </div>
       ) : (
         <div className="comparison-image">
@@ -295,8 +298,8 @@ export default function SatelliteComparison({ place, large = false }: { place: P
           <div className="before-image" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}><Picture src={srcA} enhance={useEnhance} pixelated={pixelated} alt={`${place.name}, ${labelA}`} /></div>
           <span className="image-date before-date">{short(labelA)}</span><span className="image-date after-date">{short(labelB)}</span>
           <div className="comparison-line" style={{ left: `${split}%` }}><span>‹<i />›</span></div>
-          <Slider aria-label="Before and after comparison" className="comparison-slider" min={0} max={100} value={[split]} onValueChange={v => setSplit(v[0])} />
-          <div className="image-credit">{credit}{useEnhance ? " · enhanced" : ""}</div>
+          <Slider aria-label={t("Before and after comparison")} className="comparison-slider" min={0} max={100} value={[split]} onValueChange={v => setSplit(v[0])} />
+          <div className="image-credit">{credit}{useEnhance ? ` · ${t("enhanced")}` : ""}</div>
         </div>
       )}
     </>
@@ -308,24 +311,24 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   return (
     <div className="satellite-comparison large">
       <div className="sat-toolbar">
-        <div className="sat-seg" role="tablist" aria-label="What to compare">
-          {([["landcover", "Land cover change", "Measured · NASA MODIS 2001–2024"], ["vegetation", "Vegetation (NDVI)", "Measured · same season · 2001–now"], ["imagery", "Satellite view", "Visual · 30 m Landsat/Sentinel-2"]] as const).map(([id, l, s]) => (
-            <button key={id} role="tab" aria-selected={mode === id} className={mode === id ? "on" : ""} onClick={() => setMode(id)}><strong>{l}</strong><small>{s}</small></button>
+        <div className="sat-seg" role="tablist" aria-label={t("What to compare")}>
+          {(/* i18n */[["landcover", "Land cover change", "Measured · NASA MODIS 2001–2024"], ["vegetation", "Vegetation (NDVI)", "Measured · same season · 2001–now"], ["imagery", "Satellite view", "Visual · 30 m Landsat/Sentinel-2"]]/* /i18n */ as const).map(([id, l, s]) => (
+            <button key={id} role="tab" aria-selected={mode === id} className={mode === id ? "on" : ""} onClick={() => setMode(id)}><strong>{t(l)}</strong><small>{t(s)}</small></button>
           ))}
         </div>
 
         <div className="sat-controls">
-          {mode === "imagery" && <label>Imagery<select value={kind} onChange={e => setKind(e.target.value as ImageryKind)}><option value="hls">Natural colour · 30 m (2013+)</option><option value="false721">False colour 7-2-1 · 250 m (2000+)</option></select></label>}
-          <label>Before<select value={ya} onChange={e => setYear(0, +e.target.value)}>{yearOptions.filter(y => y < yb).map(y => <option key={y}>{y}</option>)}</select></label>
-          <label>After<select value={yb} onChange={e => setYear(1, +e.target.value)}>{yearOptions.filter(y => y > ya).map(y => <option key={y}>{y}</option>)}</select></label>
-          {mode !== "landcover" && <label>Season<select value={month} onChange={e => setMonth(+e.target.value)}>{MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></label>}
-          <label>Area<select value={zoom} onChange={e => setZoom(+e.target.value)}>{ZOOMS.map((z, i) => <option key={z.label} value={i}>{z.label} · {z.km} km</option>)}</select></label>
-          <div className="view-seg" role="tablist" aria-label="View">
-            <button className={effectiveView === "swipe" ? "on" : ""} onClick={() => setView("swipe")}><SplitSquareHorizontal size={13} /> Swipe</button>
-            <button className={effectiveView === "side" ? "on" : ""} onClick={() => setView("side")}><Columns2 size={13} /> Side by side</button>
-            {canChanges && <button className={effectiveView === "changes" ? "on" : ""} onClick={() => setView("changes")}><Waypoints size={13} /> Change map</button>}
+          {mode === "imagery" && <label>{t("Imagery")}<select value={kind} onChange={e => setKind(e.target.value as ImageryKind)}><option value="hls">{t("Natural colour · 30 m (2013+)")}</option><option value="false721">{t("False colour 7-2-1 · 250 m (2000+)")}</option></select></label>}
+          <label>{t("Before")}<select value={ya} onChange={e => setYear(0, +e.target.value)}>{yearOptions.filter(v => v < yb).map(v => <option key={v} value={v}>{y(v)}</option>)}</select></label>
+          <label>{t("After")}<select value={yb} onChange={e => setYear(1, +e.target.value)}>{yearOptions.filter(v => v > ya).map(v => <option key={v} value={v}>{y(v)}</option>)}</select></label>
+          {mode !== "landcover" && <label>{t("Season")}<select value={month} onChange={e => setMonth(+e.target.value)}>{MONTHS.map((m, i) => <option key={m} value={i + 1}>{t(m)}</option>)}</select></label>}
+          <label>{t("Area")}<select value={zoom} onChange={e => setZoom(+e.target.value)}>{ZOOMS.map((z, i) => <option key={z.label} value={i}>{t(z.label)} · {n(z.km)} km</option>)}</select></label>
+          <div className="view-seg" role="tablist" aria-label={t("View")}>
+            <button className={effectiveView === "swipe" ? "on" : ""} onClick={() => setView("swipe")}><SplitSquareHorizontal size={13} /> {t("Swipe")}</button>
+            <button className={effectiveView === "side" ? "on" : ""} onClick={() => setView("side")}><Columns2 size={13} /> {t("Side by side")}</button>
+            {canChanges && <button className={effectiveView === "changes" ? "on" : ""} onClick={() => setView("changes")}><Waypoints size={13} /> {t("Change map")}</button>}
           </div>
-          {mode === "imagery" && <label className="hz-check"><input type="checkbox" checked={enhance} onChange={e => setEnhance(e.target.checked)} /> <Sparkles size={13} /> Remove haze</label>}
+          {mode === "imagery" && <label className="hz-check"><input type="checkbox" checked={enhance} onChange={e => setEnhance(e.target.checked)} /> <Sparkles size={13} /> {t("Remove haze")}</label>}
         </div>
       </div>
 
@@ -336,46 +339,46 @@ export default function SatelliteComparison({ place, large = false }: { place: P
           {mode === "landcover" && (coverNow?.value ? (() => {
             const c = coverNow.value, builtKm2 = ((c.b.share.built - c.a.share.built) / 100) * areaKm2;
             return <>
-              <h4>What changed, {ya} → {yb}</h4>
-              <p className="stat-lead"><strong>{signedPts(c.b.share.built - c.a.share.built)} pts</strong> built-up land ({c.a.share.built.toFixed(1)}% → {c.b.share.built.toFixed(1)}%), about <strong>{Math.abs(builtKm2) < 1 ? builtKm2.toFixed(1) : Math.round(builtKm2).toLocaleString("en-US")} km²</strong> {builtKm2 >= 0 ? "more" : "less"} within this {ZOOMS[zoom].km} km square.</p>
-              <table className="stat-table"><thead><tr><th>Cover</th><th>{ya}</th><th>{yb}</th><th>Change</th></tr></thead><tbody>
+              <h4>{t("What changed, {a} → {b}", { a: y(ya), b: y(yb) })}</h4>
+              <p className="stat-lead"><strong>{signedPts(c.b.share.built - c.a.share.built)} {t("pts")}</strong> {t("built-up land")} ({n(c.a.share.built, 1)}% → {n(c.b.share.built, 1)}%), {t("about")} <strong>{Math.abs(builtKm2) < 1 ? n(Math.abs(builtKm2), 1) : n(Math.round(Math.abs(builtKm2)))} km²</strong> {builtKm2 >= 0 ? t("more") : t("less")} {t("within this {km} km square.", { km: n(ZOOMS[zoom].km) })}</p>
+              <table className="stat-table"><thead><tr><th>{t("Cover")}</th><th>{y(ya)}</th><th>{y(yb)}</th><th>{t("Change")}</th></tr></thead><tbody>
                 {order.filter(g => c.a.share[g] >= 0.05 || c.b.share[g] >= 0.05).map(g => {
                   const d = c.b.share[g] - c.a.share[g];
-                  return <tr key={g}><td><i style={{ background: COVER_META[g].color }} />{COVER_META[g].label}</td><td>{c.a.share[g].toFixed(1)}%</td><td>{c.b.share[g].toFixed(1)}%</td><td className={Math.abs(d) < 1 ? "small" : d > 0 ? "up" : "down"}>{signedPts(d)}</td></tr>;
+                  return <tr key={g}><td><i style={{ background: COVER_META[g].color }} />{t(COVER_META[g].label)}</td><td>{n(c.a.share[g], 1)}%</td><td>{n(c.b.share[g], 1)}%</td><td className={Math.abs(d) < 1 ? "small" : d > 0 ? "up" : "down"}>{signedPts(d)}</td></tr>;
                 })}
               </tbody></table>
-              <p className="stat-note">{c.changedPct.toFixed(1)}% of the area changed class; {c.toBuiltPct.toFixed(1)}% became built-up. Open <b>Change map</b> to see where.</p>
-              <div className="change-legend"><span><i style={{ background: "#ff3b30" }} />Became built-up</span><span><i style={{ background: "#ff9500" }} />Lost vegetation</span><span><i style={{ background: "#34c759" }} />Gained vegetation</span><span><i style={{ background: "#409cff" }} />Water change</span></div>
-              <p className="stat-method">NASA MODIS MCD12Q1 v6.1 (IGBP classes, 500 m, yearly). An official satellite classification with roughly 74% overall accuracy, so changes under 1–2 points may be classification noise. Each data cell is 500 m × 500 m (25 ha). Swaps between cropland and grass are the least reliable classes.</p>
+              <p className="stat-note">{t("{a}% of the area changed class; {b}% became built-up.", { a: n(c.changedPct, 1), b: n(c.toBuiltPct, 1) })} {t("Open “Change map” to see where.")}</p>
+              <div className="change-legend"><span><i style={{ background: "#ff3b30" }} />{t("Became built-up")}</span><span><i style={{ background: "#ff9500" }} />{t("Lost vegetation")}</span><span><i style={{ background: "#34c759" }} />{t("Gained vegetation")}</span><span><i style={{ background: "#409cff" }} />{t("Water change")}</span></div>
+              <p className="stat-method">{t("NASA MODIS MCD12Q1 v6.1 (IGBP classes, 500 m, yearly). An official satellite classification with roughly 74% overall accuracy, so changes under 1–2 points may be classification noise. Each data cell is 500 m × 500 m (25 ha). Swaps between cropland and grass are the least reliable classes.")}</p>
             </>;
-          })() : <p className="stat-wait">{coverNow?.error ?? <><LoaderCircle className="spin" size={14} /> Measuring land cover…</>}</p>)}
+          })() : <p className="stat-wait">{coverNow?.error ?? <><LoaderCircle className="spin" size={14} /> {t("Measuring land cover…")}</>}</p>)}
 
           {mode === "vegetation" && (ndviNow?.value ? (() => {
             const v = ndviNow.value;
             return <>
-              <h4>Vegetation, {MONTHS[month - 1]} {ya} vs {yb}</h4>
-              <p className="stat-lead">Mean NDVI <strong>{v.meanA.toFixed(2)} → {v.meanB.toFixed(2)}</strong> ({signedPts(((v.meanB - v.meanA) / Math.max(0.01, v.meanA)) * 100, 0)}%).</p>
+              <h4>{t("Vegetation, {month} {a} vs {b}", { month: t(MONTHS[month - 1]), a: y(ya), b: y(yb) })}</h4>
+              <p className="stat-lead">{t("Mean NDVI")} <strong>{n(v.meanA, 2)} → {n(v.meanB, 2)}</strong> ({signedPts(((v.meanB - v.meanA) / Math.max(0.01, v.meanA)) * 100, 0)}%).</p>
               <table className="stat-table"><tbody>
-                <tr><td>Dense vegetation (NDVI ≥ 0.5)</td><td>{v.denseA.toFixed(0)}%</td><td>{v.denseB.toFixed(0)}%</td><td className={v.denseB - v.denseA > 0 ? "up" : "down"}>{signedPts(v.denseB - v.denseA, 0)}</td></tr>
-                <tr><td><i style={{ background: "#34c759" }} />Clearly greener (ΔNDVI ≥ +0.1)</td><td colSpan={3}>{v.greenerPct.toFixed(0)}% of area</td></tr>
-                <tr><td><i style={{ background: "#d66020" }} />Clearly browner (ΔNDVI ≤ −0.1)</td><td colSpan={3}>{v.brownerPct.toFixed(0)}% of area</td></tr>
+                <tr><td>{t("Dense vegetation (NDVI ≥ 0.5)")}</td><td>{n(v.denseA)}%</td><td>{n(v.denseB)}%</td><td className={v.denseB - v.denseA > 0 ? "up" : "down"}>{signedPts(v.denseB - v.denseA, 0)}</td></tr>
+                <tr><td><i style={{ background: "#34c759" }} />{t("Clearly greener (ΔNDVI ≥ +0.1)")}</td><td colSpan={3}>{t("{p}% of area", { p: n(v.greenerPct) })}</td></tr>
+                <tr><td><i style={{ background: "#d66020" }} />{t("Clearly browner (ΔNDVI ≤ −0.1)")}</td><td colSpan={3}>{t("{p}% of area", { p: n(v.brownerPct) })}</td></tr>
               </tbody></table>
-              <p className="stat-method">NASA MODIS MOD13Q1 NDVI (250 m). Each year averages three 16-day composites from the same season (from {compA[0] ? fmtDate(compA[0]).replace(/ \d{4}$/, "") : MONTHS[month - 1]}), so crop calendars and monsoon timing match. Browning can mean new buildings, bare fields or drought; greening can mean irrigation or extra crop cycles.</p>
+              <p className="stat-method">{t("NASA MODIS MOD13Q1 NDVI (250 m). Each year averages three 16-day composites from the same season (from {start}), so crop calendars and monsoon timing match. Browning can mean new buildings, bare fields or drought; greening can mean irrigation or extra crop cycles.", { start: compA[0] ? fmtDate(compA[0], lang).replace(/ [\d০-৯]{4}$/, "") : t(MONTHS[month - 1]) })}</p>
             </>;
-          })() : <p className="stat-wait">{ndviNow?.error ?? <><LoaderCircle className="spin" size={14} /> Measuring vegetation…</>}</p>)}
+          })() : <p className="stat-wait">{ndviNow?.error ?? <><LoaderCircle className="spin" size={14} /> {t("Measuring vegetation…")}</>}</p>)}
 
           {mode === "imagery" && <>
-            <h4>Like-for-like scenes</h4>
-            {[{ y: ya, s: sc?.a }, { y: yb, s: sc?.b }].map(({ y, s }) => (
-              <p key={y} className="stat-scene">
-                <b>{y}</b>{" "}
-                {s === undefined ? <><ScanSearch size={12} /> finding the clearest {MONTHS[month - 1]} pass…</> : s === null ? "no clear pass within the search window — try another month" : <>{fmtDate(s.date)} · {SENSOR_NAME[s.sensor]} · {Math.round(s.score * 100)}% clear</>}
+            <h4>{t("Like-for-like scenes")}</h4>
+            {[{ yr: ya, s: sc?.a }, { yr: yb, s: sc?.b }].map(({ yr, s }) => (
+              <p key={yr} className="stat-scene">
+                <b>{y(yr)}</b>{" "}
+                {s === undefined ? <><ScanSearch size={12} /> {t("finding the clearest {month} pass…", { month: t(MONTHS[month - 1]) })}</> : s === null ? t("no clear pass within the search window — try another month") : <>{fmtDate(s.date, lang)} · {SENSOR_NAME[s.sensor]} · {t("{p}% clear", { p: n(Math.round(s.score * 100)) })}</>}
               </p>
             ))}
-            {sc?.a && sc?.b && sc.a.sensor !== sc.b.sensor && <p className="stat-note">Different sensors in the two years (the matching sensor had no clear pass in one of them), so colours can differ slightly.</p>}
-            <p className="stat-method">{kind === "hls" ? "NASA HLS harmonises Landsat 8/9 and Sentinel-2 to the same 30 m grid and BRDF-normalised reflectance. Both scenes come from the same month and, where possible, the same sensor (Landsat by default; Sentinel-2 when both years are 2018 or later)." : "Bands 7-2-1 show water dark blue/black, vegetation green and built-up or bare land pink-magenta — good for spotting river shifts and urban growth."} Use the measured tabs for numbers.</p>
+            {sc?.a && sc?.b && sc.a.sensor !== sc.b.sensor && <p className="stat-note">{t("Different sensors in the two years (the matching sensor had no clear pass in one of them), so colours can differ slightly.")}</p>}
+            <p className="stat-method">{kind === "hls" ? t("NASA HLS harmonises Landsat 8/9 and Sentinel-2 to the same 30 m grid and BRDF-normalised reflectance. Both scenes come from the same month and, where possible, the same sensor (Landsat by default; Sentinel-2 when both years are 2018 or later).") : t("Bands 7-2-1 show water dark blue/black, vegetation green and built-up or bare land pink-magenta — good for spotting river shifts and urban growth.")} {t("Use the measured tabs for numbers.")}</p>
           </>}
-          <p className="data-note"><CircleHelp size={14} /> Real NASA observations. Comparisons use the same product and season in both years so differences reflect the land, not the sensor.</p>
+          <p className="data-note"><CircleHelp size={14} /> {t("Real NASA observations. Comparisons use the same product and season in both years so differences reflect the land, not the sensor.")}</p>
         </aside>
       </div>
     </div>

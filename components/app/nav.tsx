@@ -12,7 +12,7 @@ export const VIEW_PATH: Record<View, string> = {
 export const viewFromPath = (path: string): View =>
   (Object.entries(VIEW_PATH).find(([, p]) => p !== "/" && path.replace(/\/$/, "") === p)?.[0] as View) ?? "explore";
 
-export const NAV: { id: View; title: string; icon: typeof Compass; badge?: string }[] = [
+/* i18n */export const NAV: { id: View; title: string; icon: typeof Compass; badge?: string }[] = [
   { id: "explore", title: "Earth explorer", icon: Compass },
   { id: "disasters", title: "Live disasters", icon: Siren, badge: "LIVE" },
   { id: "atlas", title: "Climate atlas", icon: Earth, badge: "MAPS" },
@@ -20,9 +20,9 @@ export const NAV: { id: View; title: string; icon: typeof Compass; badge?: strin
   { id: "future", title: "Future scenarios", icon: FlaskConical, badge: "LAB" },
   { id: "compare", title: "Compare places", icon: Globe2 },
   { id: "reports", title: "My climate reports", icon: FileText },
-];
+];/* /i18n */
 
-export const HEADINGS: Record<View, [string, string]> = {
+/* i18n */export const HEADINGS: Record<View, [string, string]> = {
   explore: ["Every place has a climate story.", "Travel through time. Understand your world. Imagine what comes next."],
   disasters: ["The planet, right now.", "Live storms, floods, earthquakes and fires from NASA, GDACS and USGS — and the safer places around you."],
   atlas: ["Every country. Every state. Every year.", "Zoom from the whole Earth into a country and its states, and watch 45 years of NASA climate data unfold."],
@@ -30,7 +30,7 @@ export const HEADINGS: Record<View, [string, string]> = {
   future: ["The future is a possibility.", "Change the assumptions, and see what IPCC projections say about sea level."],
   compare: ["Different places. One planet.", "Put two climate histories side by side to see the bigger picture."],
   reports: ["Your planet, on the record.", "Keep your discoveries close. Saved reports stay in this browser."],
-};
+};/* /i18n */
 
 export function AppNav({ view, navigate, onData }: { view: View; navigate: (v: View) => void; onData: () => void }) {
   const { setOpenMobile } = useSidebar();

@@ -31,7 +31,7 @@ const IGBP: Record<string, { name: string; group: CoverGroup }> = {
   "134,202,227": { name: "Water", group: "water" },
 };
 
-export const COVER_META: Record<CoverGroup, { label: string; color: string }> = {
+/* i18n */export const COVER_META: Record<CoverGroup, { label: string; color: string }> = {
   built: { label: "Built-up (urban)", color: "#ff3b30" },
   cropland: { label: "Cropland", color: "#f2d64b" },
   forest: { label: "Forest", color: "#2f9e44" },
@@ -39,7 +39,7 @@ export const COVER_META: Record<CoverGroup, { label: string; color: string }> = 
   wetland: { label: "Wetland", color: "#4783b5" },
   water: { label: "Water", color: "#86cae3" },
   barren: { label: "Barren / snow", color: "#bfbfbd" },
-};
+};/* /i18n */
 const GROUPS = Object.keys(COVER_META) as CoverGroup[];
 
 export interface CoverStats { valid: number; share: Record<CoverGroup, number> } // shares in %, valid = pixel count

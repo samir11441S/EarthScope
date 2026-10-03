@@ -133,6 +133,6 @@ export function bearingDeg(lat1: number, lon1: number, lat2: number, lon2: numbe
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 }
 
-export const compass = (deg: number) => ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"][Math.round(deg / 45) % 8];
+/* i18n */export const compass = (deg: number) => ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"][Math.round(deg / 45) % 8];/* /i18n */
 
 export const isFiniteCoord = (lat: number, lon: number) => Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;

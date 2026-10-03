@@ -71,6 +71,11 @@ export function labelsLayer(Lf: L) {
 export function firesLayer(Lf: L) {
   return Lf.tileLayer(`${GIBS}/VIIRS_SNPP_Thermal_Anomalies_375m_All/default/${utcDate(-1)}/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png`, { ...FAST, maxNativeZoom: 8, maxZoom: 19, opacity: 0.95, attribution: "VIIRS active fires (NASA FIRMS)" });
 }
+/** NASA MODIS (Terra + Aqua) aerosol optical depth: smoke, dust and haze from yesterday's passes. */
+export function aerosolLayer(Lf: L) {
+  return Lf.tileLayer(`${GIBS}/MODIS_Combined_Value_Added_AOD/default/${utcDate(-1)}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`, { ...FAST, maxNativeZoom: 6, maxZoom: 19, opacity: 0.65, attribution: "MODIS aerosol optical depth (NASA)" });
+}
+
 export function rainLayer(Lf: L) {
   return Lf.tileLayer(`${GIBS}/IMERG_Precipitation_Rate/default/${utcDate(-1)}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`, { ...FAST, maxNativeZoom: 6, maxZoom: 19, opacity: 0.7, attribution: "GPM IMERG precipitation (NASA)" });
 }
@@ -85,12 +90,12 @@ const FLOOD_CLASSES = [
   { rgb: [50, 210, 245], cls: "water" },       // normal surface water (reference)
   { rgb: [175, 175, 175], cls: "nodata" },     // cloud / insufficient observations
 ] as const;
-export const FLOOD_LEGEND = [
+/* i18n */export const FLOOD_LEGEND = [
   { cls: "flood", label: "Unusual flood", color: "#ff2d3a" },
   { cls: "recurring", label: "Seasonal flood", color: "#ffd400" },
   { cls: "water", label: "Normal water", color: "#32d2f5" },
   { cls: "nodata", label: "Cloud / no data", color: "#9aa0a6" },
-] as const;
+] as const;/* /i18n */
 
 export function floodLayer(Lf: L, opts: { days: 1 | 2 | 3; mode: FloodMode; showGaps: boolean; date?: string }) {
   const date = opts.date ?? utcDate(-1);

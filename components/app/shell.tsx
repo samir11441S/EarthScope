@@ -82,8 +82,10 @@ function App({ initialView }: { initialView: View }) {
   useEffect(() => {
     const onPop = () => { const v = viewFromPath(window.location.pathname); setView(v); setPlaying(false); };
     window.addEventListener("popstate", onPop);
+    // The URL is the source of truth: keep the view in step if the app remounts on a client-side route.
+    if (viewFromPath(window.location.pathname) !== initialView) queueMicrotask(onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, []);
+  }, [initialView]);
   useEffect(() => { document.title = view === "explore" ? "EarthScope — Climate Time Machine" : `${t(NAV.find(n => n.id === view)!.title)} · EarthScope`; }, [view, t]);
 
   const selectPlace = useCallback((p: Place) => { setPlace(p); setPlaying(false); }, []);

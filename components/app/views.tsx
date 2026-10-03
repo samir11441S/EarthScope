@@ -23,7 +23,7 @@ export function FutureView({ place, data, year, setYear, warming, setWarming, ra
   const { t, n, y } = useI18n();
   const sg = useSigned();
   const current = observation(data, year, warming, rainChange);
-  const presets = [{ label: "Lower change", tt: 1, r: 0 }, { label: "Moderate", tt: 1.5, r: -10 }, { label: "Higher change", tt: 3, r: -20 }];
+  /* i18n */const presets = [{ label: "Lower change", tt: 1, r: 0 }, { label: "Moderate", tt: 1.5, r: -10 }, { label: "Higher change", tt: 3, r: -20 }];/* /i18n */
   return <>
     <section className="scenario-grid">
       <div className="content-panel scenario-controls">

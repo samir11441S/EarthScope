@@ -13,14 +13,14 @@ export class LocateError extends Error {
   constructor(public reason: LocateFailure) { super(reason); }
 }
 
-export const LOCATE_HELP: Record<LocateFailure, { title: string; fix: string }> = {
+/* i18n */export const LOCATE_HELP: Record<LocateFailure, { title: string; fix: string }> = {
   unsupported: { title: "This browser can't share its location.", fix: "Use approximate location, search for your area, or pick a spot on the map." },
   insecure: { title: "Location only works on a secure (https) page.", fix: "Open EarthScope over https, or use approximate location / search instead." },
   "blocked-frame": { title: "This page is embedded in another site that doesn't allow location.", fix: "Open EarthScope in its own tab, or use approximate location / search instead." },
   denied: { title: "Location permission is blocked for this site.", fix: "Click the lock or tune icon left of the address bar → Site settings → Location → Allow, then try again. Or use approximate location / search." },
   unavailable: { title: "Your device couldn't determine its location.", fix: "Turn on location services (Windows: Settings → Privacy & security → Location; phones: Location in quick settings) and try again, or use approximate location / search." },
   timeout: { title: "Finding your location took too long.", fix: "Try again near a window or with Wi-Fi on, or use approximate location / search." },
-};
+};/* /i18n */
 
 function once(opts: PositionOptions): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, opts));
