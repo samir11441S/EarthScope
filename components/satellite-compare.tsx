@@ -497,6 +497,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
             {sc?.a && sc?.b && sc.a.sensor !== sc.b.sensor && <p className="stat-note">{t("Different sensors in the two years (the matching sensor had no clear pass in one of them), so colours can differ slightly.")}</p>}
             <p className="stat-method">{kind === "hls" ? t("NASA HLS harmonises Landsat 8/9 and Sentinel-2 to the same 30 m grid and BRDF-normalised reflectance. Both scenes come from the same month and, where possible, the same sensor (Landsat by default; Sentinel-2 when both years are 2018 or later).") : t("Bands 7-2-1 show water dark blue/black, vegetation green and built-up or bare land pink-magenta — good for spotting river shifts and urban growth.")} {t("Use the measured tabs for numbers.")}</p>
           </>}
+          {(mode === "vegetation" || mode === "heat") && <button className="outline-button tl-link" onClick={() => { window.history.pushState({ view: "trends" }, "", "/trends"); window.dispatchEvent(new PopStateEvent("popstate")); }}>{t("See every year 2001–now as a trend map in the Trend Lab")} →</button>}
           <p className="data-note"><CircleHelp size={14} /> {t("Real NASA observations. Comparisons use the same product and season in both years so differences reflect the land, not the sensor.")}</p>
         </aside>
       </div>

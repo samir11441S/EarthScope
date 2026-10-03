@@ -15,6 +15,7 @@ import { useI18n } from "@/lib/i18n";
 ];/* /i18n */
 /* i18n */const NOTES = [
   { icon: TrendingUp, title: "Honest trend statistics", text: "Trends are least-squares slopes with 95% confidence intervals and an autocorrelation-corrected t-test (Santer et al. 2000). A change is called “warming” or “cooling” only when p < 0.05; otherwise EarthScope says there is no clear trend yet. The statistics are covered by automated tests." },
+  { icon: TrendingUp, title: "Trend Lab: maps of significant change", text: "Every NASA POWER grid cell (10 variables, 5 seasons) and every MODIS pixel (day and night surface temperature, NDVI) gets a Mann–Kendall test with trend-free pre-whitening and a Sen's slope. The Benjamini–Hochberg false-discovery rate (10%) controls for testing hundreds of places at once, and each POWER cell is break-tested first." },
   { icon: FlaskConical, title: "Transparent scenarios", text: "User-selected changes are applied linearly from {to} to {end}. These are educational scenarios, not CMIP6 output; the globe’s years after {to} extend observed trends and are flagged as such." },
   { icon: Sparkles, title: "Ask Earth", text: "Answers are written by an AI model (Claude, or a free open model) only from EarthScope’s NASA data and live feeds, with sources cited. When AI is unavailable, a rule-based guide answers from the same data." },
 ];/* /i18n */

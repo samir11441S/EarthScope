@@ -487,3 +487,4 @@
 .tl-case-table td.up{color:#ff8a7a}.tl-case-table td.down{color:#5cc2ff}
 @media (max-width:1100px){.tlab-grid{grid-template-columns:1fr}.tl-panel{max-height:none}.tl-map{height:480px}}
 @media (max-width:640px){.tl-engine{grid-template-columns:1fr}.tl-map{height:380px}.tl-verdict b{font-size:16px}}
+.tl-link{width:100%;justify-content:center;margin:0 0 10px}
