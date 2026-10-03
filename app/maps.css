@@ -412,3 +412,19 @@
 .lc-legend span{display:inline-flex;align-items:center;gap:5px;cursor:default}
 .lc-legend i{width:10px;height:10px;border-radius:2px;flex:none;box-shadow:0 0 0 1px #0006}
 @media (max-width:640px){.lc-legend{max-width:calc(100% - 24px);font-size:9.5px}}
+/* Land-cover time-lapse */
+.tl-frame{position:relative;z-index:1;width:100%;height:100%;image-rendering:pixelated;transition:opacity .25s}
+.tl-year{font-size:22px!important;font-weight:700;padding:6px 14px!important;font-variant-numeric:tabular-nums}
+.tl-controls{position:absolute;left:12px;right:12px;bottom:14px;z-index:5;display:flex;align-items:center;gap:12px;background:#050b1bd9;backdrop-filter:blur(6px);border:1px solid #ffffff1f;border-radius:999px;padding:6px 16px 6px 6px}
+.tl-controls button{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:linear-gradient(90deg,#2f8cff,#38b6ff);color:#fff;display:grid;place-items:center;cursor:pointer}
+.tl-controls>:last-child{flex:1}
+.tl-view .image-credit{bottom:64px}
+.sat-view:has(.tl-view) .lc-legend{bottom:66px}
+.tl-chart{background:#ffffff06;border:1px solid #ffffff10;border-radius:10px;padding:10px 12px 6px;margin:0 0 14px}
+.tl-chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.tl-chart-head strong{color:#e7ecf3;font-size:12.5px;font-weight:600}.tl-chart-head span{color:#ff6b61;font-weight:600;font-variant-numeric:tabular-nums}
+.tl-chart svg{width:100%;height:auto;display:block;cursor:pointer}
+.tl-chart text{fill:#6f86a5;font-size:9px}
+.tl-grid{stroke:#ffffff12}.tl-area{fill:#ff3b3022}.tl-line{fill:none;stroke:#ff4d42;stroke-width:2}
+.tl-cursor{stroke:#5cc2ff;stroke-dasharray:3 3}.tl-dot{fill:#fff;stroke:#ff4d42;stroke-width:2}
+.tl-chart p{margin:4px 0 0;font-size:11.5px;color:#a6b6cc}

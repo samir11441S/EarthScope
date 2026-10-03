@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CircleHelp, Columns2, ImageIcon, Layers3, LoaderCircle, ScanSearch, Sparkles, SplitSquareHorizontal, Waypoints } from "lucide-react";
+import { CircleHelp, Clapperboard, Columns2, ImageIcon, Layers3, LoaderCircle, Pause, Play, ScanSearch, Sparkles, SplitSquareHorizontal, Waypoints } from "lucide-react";
 import { RangeControl as Slider } from "./range-control";
 import type { Place } from "@/lib/climate";
 import { useI18n } from "@/lib/i18n";
-import { compareLandCover, compareLst, compareNdvi, COVER_META, HEAT_RAMP, LANDCOVER_LEGEND, LANDCOVER_YEARS, LST_REL_THRESHOLD, lstComposites, ndviComposites, renderLst, type CoverChange, type CoverGroup, type LstChange, type NdviChange } from "@/lib/earth-change";
+import { compareLandCover, compareLst, coverShares, compareNdvi, COVER_META, HEAT_RAMP, LANDCOVER_LEGEND, LANDCOVER_YEARS, LST_REL_THRESHOLD, lstComposites, ndviComposites, renderLst, type CoverChange, type CoverGroup, type CoverStats, type LstChange, type NdviChange } from "@/lib/earth-change";
 
 // Satellite comparison, rebuilt for like-for-like accuracy:
 //   • Land cover — NASA MODIS MCD12Q1 (official yearly classification), measured shares + change map.
@@ -14,7 +14,7 @@ import { compareLandCover, compareLst, compareNdvi, COVER_META, HEAT_RAMP, LANDC
 
 type Mode = "landcover" | "vegetation" | "heat" | "imagery";
 export type ImageryKind = "hls" | "false721";
-type View = "swipe" | "side" | "changes";
+type View = "swipe" | "side" | "changes" | "timelapse";
 export type Scene = { date: string; sensor: "S30" | "L30" | "MODIS"; score: number };
 
 /* i18n */const ZOOMS = [
@@ -194,6 +194,40 @@ function Overlay({ data }: { data: ImageData | null }) {
   return <canvas ref={ref} className="change-overlay" aria-hidden="true" />;
 }
 
+/** One time-lapse frame, drawn straight from decoded pixels so frames switch instantly. */
+function Frame({ data, dim }: { data: ImageData | null; dim: boolean }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c || !data) return;
+    c.width = data.width; c.height = data.height;
+    c.getContext("2d")!.putImageData(data, 0, 0);
+  }, [data]);
+  return <canvas ref={ref} className="tl-frame" style={{ opacity: data ? (dim ? 0.55 : 1) : 0 }} aria-hidden="true" />;
+}
+
+/** Built-up share for every year, with the shown year marked; click a point to jump there. */
+function GrowthChart({ years, shares, idx, onPick }: { years: number[]; shares: (CoverStats | null)[]; idx: number; onPick: (i: number) => void }) {
+  const { t, n, y } = useI18n();
+  const pts = shares.map((s, i) => (s && s.valid ? { i, v: s.share.built } : null)).filter((p): p is { i: number; v: number } => !!p);
+  if (pts.length < 2) return null;
+  const W = 300, H = 92, L = 30, B = 18, max = Math.max(5, Math.ceil(Math.max(...pts.map(p => p.v)) / 5) * 5);
+  const X = (i: number) => L + (i / (years.length - 1)) * (W - L - 6), Y = (v: number) => 6 + (1 - v / max) * (H - B - 6);
+  const line = pts.map((p, k) => `${k ? "L" : "M"}${X(p.i).toFixed(1)},${Y(p.v).toFixed(1)}`).join("");
+  const cur = pts.find(p => p.i === idx), first = pts[0], last = pts[pts.length - 1];
+  return <div className="tl-chart">
+    <div className="tl-chart-head"><strong>{t("Built-up land, every year")}</strong><span>{n(first.v, 1)}% → {n(last.v, 1)}%</span></div>
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t("Built-up land, every year")} onClick={e => { const r = e.currentTarget.getBoundingClientRect(); const x = ((e.clientX - r.left) / r.width) * W; onPick(Math.max(0, Math.min(years.length - 1, Math.round(((x - L) / (W - L - 6)) * (years.length - 1))))); }}>
+      {[0, max / 2, max].map(v => <g key={v}><line x1={L} x2={W - 4} y1={Y(v)} y2={Y(v)} className="tl-grid" /><text x={L - 5} y={Y(v) + 3} textAnchor="end">{n(v)}%</text></g>)}
+      <path d={`${line}L${X(last.i)},${Y(0)}L${X(first.i)},${Y(0)}Z`} className="tl-area" />
+      <path d={line} className="tl-line" />
+      <text x={L} y={H - 4}>{y(years[0])}</text><text x={W - 6} y={H - 4} textAnchor="end">{y(years[years.length - 1])}</text>
+      {cur && <><line x1={X(cur.i)} x2={X(cur.i)} y1={6} y2={H - B} className="tl-cursor" /><circle cx={X(cur.i)} cy={Y(cur.v)} r={4} className="tl-dot" /></>}
+    </svg>
+    {cur && <p>{t("{year}: {p}% of this square is built-up.", { year: y(years[cur.i]), p: n(cur.v, 1) })}</p>}
+  </div>;
+}
+
 // Error messages set in effects and translated at render time.
 /* i18n */// "NASA land-cover tiles could not be loaded." "NASA NDVI tiles could not be loaded." "No NDVI composites for that month yet — pick an earlier month or year." "No surface-temperature composites for that month yet — pick an earlier month or year." "Clouds hid this area in that month — try a drier month such as January–April." "NASA surface-temperature tiles could not be loaded."
 /* /i18n */
@@ -256,6 +290,34 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   }, [mode, nKey]);
   const ndviNow = ndvi && ndvi.key === nKey ? ndvi : null;
 
+  // ---- Time-lapse: every land-cover year, played as an animation ------------
+  const tlYears = useMemo(() => range(LANDCOVER_YEARS[0], LANDCOVER_YEARS[1]), []);
+  const tlKey = `${place.lat},${place.lon},${span}`;
+  const [tl, setTl] = useState<{ key: string; frames: (ImageData | null)[]; shares: (CoverStats | null)[]; done: number } | null>(null);
+  const [tlIdx, setTlIdx] = useState(tlYears.length - 1);
+  const [tlPlaying, setTlPlaying] = useState(false);
+  useEffect(() => {
+    if (mode !== "landcover" || view !== "timelapse") return;
+    let active = true;
+    queueMicrotask(() => active && setTl(s => (s && s.key === tlKey ? s : { key: tlKey, frames: tlYears.map(() => null), shares: tlYears.map(() => null), done: 0 })));
+    tlYears.forEach((yr, i) => {
+      pixels(img(place, "landcover", `${yr}-01-01`, span, SIZE_ANALYSIS), SIZE_ANALYSIS)
+        .then(d => active && setTl(s => (s && s.key === tlKey && !s.frames[i] ? { ...s, frames: s.frames.map((f, j) => (j === i ? d : f)), shares: s.shares.map((x, j) => (j === i ? coverShares(d.data) : x)), done: s.done + 1 } : s)))
+        .catch(() => active && setTl(s => (s && s.key === tlKey ? { ...s, done: s.done + 1 } : s)));
+    });
+    return () => { active = false; };
+    // the key captures place and area
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, view, tlKey]);
+  const tlNow = tl && tl.key === tlKey ? tl : null;
+  useEffect(() => {
+    if (!tlPlaying) return;
+    const id = setInterval(() => setTlIdx(i => (i >= tlYears.length - 1 ? 0 : i + 1)), 700);
+    return () => clearInterval(id);
+  }, [tlPlaying, tlYears.length]);
+  // Shown frame: the chosen year, or the nearest earlier year that has loaded.
+  const tlFrame = tlNow ? (tlNow.frames.slice(0, tlIdx + 1).reverse().find(f => !!f) ?? null) : null;
+
   // ---- Surface heat (land-surface temperature) -------------------------------
   const lstA = useMemo(() => lstComposites(ya, month), [ya, month]), lstB = useMemo(() => lstComposites(yb, month), [yb, month]);
   const hKey = `${place.lat},${place.lon},${span},${lstA.join()},${lstB.join()}`;
@@ -312,7 +374,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   const pixelated = mode === "landcover" || mode === "heat";
   const overlay = mode === "landcover" ? coverNow?.value?.overlay ?? null : mode === "vegetation" ? ndviNow?.value?.overlay ?? null : mode === "heat" ? heatNow?.value?.overlay ?? null : null;
   const canChanges = mode !== "imagery";
-  const effectiveView: View = view === "changes" && !canChanges ? "swipe" : view;
+  const effectiveView: View = (view === "changes" && !canChanges) || (view === "timelapse" && mode !== "landcover") ? "swipe" : view;
   const useEnhance = enhance && mode === "imagery";
   const short = (s: string) => (large ? s : s.slice(0, 4));
   const canPhoto = mode === "landcover" || mode === "heat";
@@ -323,7 +385,22 @@ export default function SatelliteComparison({ place, large = false }: { place: P
 
   const viewer = (
     <>
-      {effectiveView === "side" ? (
+      {effectiveView === "timelapse" ? (
+        <div className="comparison-image tl-view">
+          <div className="sat-image">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {under && <img className="sat-under" src={under} alt="" />}
+            <Frame data={tlFrame} dim={!!under} />
+          </div>
+          <span className="image-date before-date tl-year">{y(tlYears[tlIdx])}</span>
+          {(!tlNow || tlNow.done < tlYears.length) && <span className="image-date after-date"><LoaderCircle className="spin" size={12} /> {t("Loading years {a}/{b}", { a: n(tlNow?.done ?? 0), b: n(tlYears.length) })}</span>}
+          <div className="tl-controls">
+            <button onClick={() => { if (!tlPlaying && tlIdx >= tlYears.length - 1) setTlIdx(0); setTlPlaying(v => !v); }} aria-label={tlPlaying ? t("Pause") : t("Play years")}>{tlPlaying ? <Pause size={16} /> : <Play size={16} />}</button>
+            <Slider aria-label={t("Map year")} min={0} max={tlYears.length - 1} step={1} value={[tlIdx]} onValueChange={v => { setTlPlaying(false); setTlIdx(v[0]); }} />
+          </div>
+          <div className="image-credit">{credit}{under ? ` · ${t("photo © Esri, Maxar")}` : ""}</div>
+        </div>
+      ) : effectiveView === "side" ? (
         <div className="sat-side">
           {[{ src: srcA, label: labelA }, { src: srcB, label: labelB }].map((x, i) => (
             <div key={i} className="comparison-image"><Picture src={x.src} enhance={useEnhance} pixelated={pixelated} under={under} alt={`${place.name}, ${x.label}`} /><span className="image-date before-date">{x.label}</span></div>
@@ -374,6 +451,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
             <button className={effectiveView === "swipe" ? "on" : ""} onClick={() => setView("swipe")}><SplitSquareHorizontal size={13} /> {t("Swipe")}</button>
             <button className={effectiveView === "side" ? "on" : ""} onClick={() => setView("side")}><Columns2 size={13} /> {t("Side by side")}</button>
             {canChanges && <button className={effectiveView === "changes" ? "on" : ""} onClick={() => setView("changes")}><Waypoints size={13} /> {t("Change map")}</button>}
+            {mode === "landcover" && <button className={effectiveView === "timelapse" ? "on" : ""} onClick={() => { setView("timelapse"); setTlPlaying(true); setTlIdx(0); }}><Clapperboard size={13} /> {t("Time-lapse")}</button>}
           </div>
           {canPhoto && <label className="hz-check" title={t("Lay the measured map over a present-day high-resolution photo")}><input type="checkbox" checked={photo} onChange={e => setPhoto(e.target.checked)} /> <ImageIcon size={13} /> {t("On satellite photo")}</label>}
           {mode === "imagery" && <label className="hz-check"><input type="checkbox" checked={enhance} onChange={e => setEnhance(e.target.checked)} /> <Sparkles size={13} /> {t("Remove haze")}</label>}
@@ -387,6 +465,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
           {mode === "landcover" && (coverNow?.value ? (() => {
             const c = coverNow.value, builtKm2 = ((c.b.share.built - c.a.share.built) / 100) * areaKm2;
             return <>
+              {effectiveView === "timelapse" && tlNow && <GrowthChart years={tlYears} shares={tlNow.shares} idx={tlIdx} onPick={i => { setTlPlaying(false); setTlIdx(i); }} />}
               <h4>{t("What changed, {a} → {b}", { a: y(ya), b: y(yb) })}</h4>
               <p className="stat-lead"><strong>{sp(c.b.share.built - c.a.share.built)} {t("pts")}</strong> {t("built-up land")} ({n(c.a.share.built, 1)}% → {n(c.b.share.built, 1)}%), {t("about")} <strong>{Math.abs(builtKm2) < 1 ? n(Math.abs(builtKm2), 1) : n(Math.round(Math.abs(builtKm2)))} km²</strong> {builtKm2 >= 0 ? t("more") : t("less")} {t("within this {km} km square.", { km: n(ZOOMS[zoom].km) })}</p>
               <table className="stat-table"><thead><tr><th>{t("Cover")}</th><th>{y(ya)}</th><th>{y(yb)}</th><th>{t("Change")}</th></tr></thead><tbody>

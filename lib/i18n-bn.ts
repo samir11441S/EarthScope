@@ -846,4 +846,10 @@ export const BN: Record<string, string> = {
   "Permanent wetland": "স্থায়ী জলাভূমি",
   "Barren": "অনুর্বর ভূমি",
   "Snow and ice": "তুষার ও বরফ",
+  "A new version of EarthScope is available.": "EarthScope-এর নতুন সংস্করণ এসেছে।",
+  "Reload": "নতুন করে লোড করুন",
+  "Built-up land, every year": "প্রতি বছরের নির্মিত এলাকা",
+  "{year}: {p}% of this square is built-up.": "{year}: এই বর্গক্ষেত্রের {p}% নির্মিত এলাকা।",
+  "Loading years {a}/{b}": "বছর লোড হচ্ছে {a}/{b}",
+  "Time-lapse": "টাইম-ল্যাপস",
 };

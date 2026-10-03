@@ -1,6 +1,7 @@
 // EarthScope service worker: makes the app installable, keeps the last live data for offline use,
 // and shows alert notifications. Map tiles from NASA/Esri are not cached (too large).
-const VERSION = "earthscope-v4";
+// Registered as /sw.js?v=<build id>, so every deployment gets a fresh cache and old ones are deleted.
+const VERSION = `earthscope-${new URL(self.location.href).searchParams.get("v") || "v4"}`;
 const SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/favicon.svg"];
 // Live data whose last good answer is useful offline.
 const LIVE_API = ["/api/disasters", "/api/heat", "/api/safe-places", "/api/climate"];

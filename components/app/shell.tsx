@@ -93,7 +93,23 @@ function App({ initialView }: { initialView: View }) {
   useEffect(() => { installErrorReporting(); }, []);
   useEffect(() => {
     if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.register("/sw.js").catch(() => { /* the app works without it */ });
+    const build = process.env.NEXT_PUBLIC_BUILD_ID ?? "dev";
+    navigator.serviceWorker.register(`/sw.js?v=${build}`).catch(() => { /* the app works without it */ });
+    // Tabs and installed apps can stay open for days: offer a reload as soon as a new version is deployed.
+    let told = false;
+    const check = () => {
+      if (told || document.visibilityState !== "visible") return;
+      fetch("/api/version", { cache: "no-store" }).then(r => r.json() as Promise<{ build?: string }>).then(j => {
+        if (!j.build || j.build === build || j.build === "dev" || told) return;
+        told = true;
+        toast.info(t("A new version of EarthScope is available."), { duration: Infinity, action: { label: t("Reload"), onClick: () => location.reload() } });
+      }).catch(() => {});
+    };
+    const timer = setInterval(check, 15 * 60_000);
+    document.addEventListener("visibilitychange", check);
+    return () => { clearInterval(timer); document.removeEventListener("visibilitychange", check); };
+    // runs once; t is only used for the toast text
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { if (!playing) return; const timer = setInterval(() => setYear(v => { if (v >= SCENARIO_END) { setPlaying(false); return SCENARIO_END; } return v + 1; }), 650); return () => clearInterval(timer); }, [playing]);

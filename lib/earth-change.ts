@@ -80,7 +80,8 @@ export interface CoverChange {
 const groupAt = (d: Uint8ClampedArray, i: number): CoverGroup | null => (d[i + 3] < 128 ? null : IGBP[`${d[i]},${d[i + 1]},${d[i + 2]}`]?.group ?? null);
 const isGreen = (g: CoverGroup | null) => g === "forest" || g === "cropland" || g === "shrubGrass" || g === "wetland";
 
-function shares(d: Uint8ClampedArray): CoverStats {
+/** Share of each land-cover group in one decoded land-cover image. */
+export function coverShares(d: Uint8ClampedArray): CoverStats {
   const n: Record<string, number> = {};
   let valid = 0;
   for (let i = 0; i < d.length; i += 4) { const g = groupAt(d, i); if (!g) continue; valid++; n[g] = (n[g] ?? 0) + 1; }
@@ -111,7 +112,7 @@ export function compareLandCover(a: ImageData, b: ImageData, areaKm2: number): C
     if (c) { o[i] = c[0]; o[i + 1] = c[1]; o[i + 2] = c[2]; o[i + 3] = 235; }
   }
   return {
-    a: shares(a.data), b: shares(b.data),
+    a: coverShares(a.data), b: coverShares(b.data),
     changedPct: both ? (changed / both) * 100 : 0, toBuiltPct: both ? (toBuilt / both) * 100 : 0,
     overlay, pixelKm2: areaKm2 / (a.width * a.height),
     present: [...seen].filter(([, n]) => n >= 4).sort((x, y) => y[1] - x[1]).map(([k]) => k),
