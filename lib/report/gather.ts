@@ -7,6 +7,7 @@ import { assessSafety, type HazardFeed, type SafePlace } from "../hazards";
 import { distanceKm } from "../geo";
 import type { HeatOutlook } from "../heat";
 import type { AirQuality } from "../air-quality";
+import type { AnnualSeries } from "../crosscheck";
 import { findClearestScene, pixels } from "@/components/satellite-compare";
 import type { ReportInputs } from "./model";
 
@@ -38,6 +39,7 @@ export async function gatherReport(
 
   const extremesJob = track("extremes", settle(json<{ years: ExtremeYear[]; version: string | null }>(`/api/extremes?lat=${place.lat.toFixed(4)}&lon=${place.lon.toFixed(4)}`, 60000)));
 
+  const era5Job = settle(json<AnnualSeries>(`/api/crosscheck?lat=${place.lat.toFixed(3)}&lon=${place.lon.toFixed(3)}`, 30000));
   const landJob = track("land", settle((async () => {
     const [y0, y1] = LANDCOVER_YEARS, area = (REPORT_SPAN * 110.57) ** 2;
     const [a, b, region] = await Promise.all([pixels(landcoverUrl(place, y0), SIZE), pixels(landcoverUrl(place, y1), SIZE), settle(pixels(landcoverUrl(place, y1, REGION_SPAN), 256))]);
@@ -87,13 +89,14 @@ export async function gatherReport(
   })());
 
   onStep?.("climate", true);
-  const [extremes, land, ndvi, cover, live] = await Promise.all([extremesJob, landJob, vegJob, coverJob, liveJob]);
+  const [extremes, land, ndvi, cover, live, era5] = await Promise.all([extremesJob, landJob, vegJob, coverJob, liveJob, era5Job]);
   const inputs: ReportInputs = {
     version: 2,
     place: base.place, year: base.year, warming: base.warming, rainChange: base.rainChange,
     created: new Date().toISOString(),
     climate: base.climate,
     extremes: extremes ? { years: extremes.years, version: extremes.version } : null,
+    era5: era5?.years ? { years: era5.years, temperature: era5.temperature, rainfall: era5.rainfall } : null,
     land: land?.land ?? null, regionWaterPct: land?.regionWaterPct ?? null,
     ndvi,
     cover: cover ? { date: cover.date, sensor: cover.sensor } : null,

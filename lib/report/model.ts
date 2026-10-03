@@ -6,6 +6,7 @@ import { summarizeExtremes, type ExtremeYear, type IndexKey, type IndexStat } fr
 import { observedRate } from "../nasa-global-data";
 import type { CoverGroup } from "../earth-change";
 import type { HazardType, SafePlaceKind, Severity } from "../hazards";
+import type { AnnualSeries } from "../crosscheck";
 import type { HeatDay } from "../heat";
 
 export type Lang = "en" | "bn";
@@ -24,6 +25,7 @@ export interface ReportInputs {
   regionWaterPct: number | null; // open water + wetland share within ~240 km (coastal / delta context)
   cover: { date: string; sensor: string } | null; // satellite scene used on the cover
   heat: { days: HeatDay[]; source: string } | null;
+  era5?: AnnualSeries | null; // ECMWF ERA5 annual series for the independent cross-check
   air?: { aqi: number; pm25: number; peakAqi: number; days: { date: string; maxAqi: number }[] } | null; // CAMS forecast (reports saved before v2.1 have none)
   hazards: { title: string; type: HazardType; severity: Severity; distanceKm: number; inside: boolean; eta?: string; url?: string }[] | null;
   hazardsUpdated: string | null;

@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n";
 import { ChartPath, Sparkline } from "./charts";
 import { EarthGlobe, SatelliteComparison } from "./lazy";
 import type { View } from "./nav";
+import { CrossCheckNote } from "./crosscheck";
 
 /* i18n */const LAYERS: Layer[] = ["Natural color", "Temperature", "Rainfall", "Vegetation", "Flood exposure"];/* /i18n */
 
@@ -66,6 +67,7 @@ export function ExploreView({ place, data, year, setYear, playing, setPlaying, l
   return <>
     <MetricCards data={data} year={year} warming={warming} rainChange={rainChange}/>
     <DataQualityNote data={data}/>
+    <CrossCheckNote place={place} data={data}/>
     <div className="explorer-grid">
       <section className="earth-panel">
         <div className="earth-panel-top"><span><Globe2 size={15}/> {t("Planet view")}</span><div><span className="map-mode">{t("3D EARTH")}</span><button aria-label={t("Expand planet view")} onClick={fullscreen}><Maximize2 size={15}/></button></div></div>

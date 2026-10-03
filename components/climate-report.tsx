@@ -9,6 +9,7 @@ import { INDEX_META, type IndexKey, type IndexStat } from "@/lib/extremes";
 import { HEAT_META } from "@/lib/heat";
 import { aqiCategory, WHO_PM25_24H } from "@/lib/air-quality";
 import { makeI18n } from "@/lib/i18n";
+import { crossCheck } from "@/lib/crosscheck";
 import { linearTrend } from "@/lib/stats";
 import { buildModel, reportCsv, type Audience, type Lang, type ReportInputs, type ReportModel, type Risk } from "@/lib/report/model";
 import { gatherReport, landcoverUrl, REPORT_SPAN, type Step } from "@/lib/report/gather";
@@ -347,7 +348,10 @@ function Quality({ m, t, lang }: { m: ReportModel; t: Dict; lang: Lang }) {
     parts.push(t.quality.rStep({ step: sgn(lang, (h.rainBreak.step / Math.max(1, mean)) * 100, 0), year: yr(lang, h.rainBreak.year) }));
   }
   const and = lang === "bn" ? " এবং " : " and ";
-  return <div className="rp-callout quality"><b>{t.quality.title}</b> {parts.length ? t.quality.step({ parts: parts.join(and), from: yr(lang, h.tempFrom), to: yr(lang, m.latest.year), rain: h.rainFrom !== h.tempFrom ? yr(lang, h.rainFrom) : "" }) : t.quality.none}</div>;
+  const c = m.inputs.era5 ? crossCheck(m.annual, m.inputs.era5, h.tempFrom) : null;
+  const ft = (v: number | null) => (v === null ? "—" : sgn(lang, v, 2));
+  const era5 = c ? t.quality.era5({ r: num(lang, c.tempR, 2), from: yr(lang, c.years[0]), to: yr(lang, c.years[1]), p: ft(c.powerTrend), e: ft(c.era5Trend), full: h.tempBreak && !c.era5Break && c.era5FullTrend ? ft(c.era5FullTrend.perDecade) : "", start: c.era5FullTrend ? yr(lang, c.era5FullTrend.from) : "" }) : "";
+  return <div className="rp-callout quality"><b>{t.quality.title}</b> {parts.length ? t.quality.step({ parts: parts.join(and), from: yr(lang, h.tempFrom), to: yr(lang, m.latest.year), rain: h.rainFrom !== h.tempFrom ? yr(lang, h.rainFrom) : "" }) : t.quality.none}{era5 && <> {era5}</>}</div>;
 }
 
 /* ------------------------------ Charts ------------------------------ */

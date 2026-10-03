@@ -388,3 +388,20 @@
 .heat-ramp{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;font-size:10.5px;color:#7d92ae;margin:-4px 0 12px}
 .heat-ramp i{grid-column:2;grid-row:1;height:8px;border-radius:4px}
 .heat-ramp span:first-of-type{grid-column:1;grid-row:1}.heat-ramp span:last-of-type{grid-column:3;grid-row:1}
+
+/* NASA POWER vs ERA5 cross-check */
+.crosscheck-note{background:#32a6ff0d;border:1px solid #32a6ff33;border-radius:10px;padding:0 14px;margin:-8px 0 18px;color:#b9c8dc;font-size:12px;line-height:1.6}
+.crosscheck-note.differ{background:#ffa3470d;border-color:#ffa34740}
+.crosscheck-note summary{display:flex;align-items:center;gap:9px;padding:10px 0;cursor:pointer;list-style:none}
+.crosscheck-note summary::-webkit-details-marker{display:none}
+.crosscheck-note summary>svg:first-child{flex:none;color:#5cc2ff}
+.crosscheck-note summary span{flex:1;min-width:0}
+.crosscheck-note summary strong{color:#cfe6ff}
+.crosscheck-note .chev{flex:none;transition:transform .2s}
+.crosscheck-note[open] .chev{transform:rotate(180deg)}
+.crosscheck-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin:2px 0 10px}
+.crosscheck-grid div{background:#ffffff08;border-radius:8px;padding:7px 10px;display:flex;flex-direction:column;gap:2px}
+.crosscheck-grid span{font-size:10.5px;color:#7d92ae}
+.crosscheck-grid b{color:#eef3fa;font-weight:600;font-variant-numeric:tabular-nums}
+.crosscheck-note p{margin:0 0 8px}
+.crosscheck-source{font-size:10.5px;color:#6f86a5}
