@@ -40,6 +40,72 @@ function detailImagery(Lf: L, minZoom: number) {
   return Lf.tileLayer(`${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`, { ...FAST, minZoom, maxNativeZoom: 18, maxZoom: 19, attribution: ESRI_ATTRIBUTION });
 }
 
+const dayBefore = (date: string) => new Date(Date.parse(date) - 86_400_000).toISOString().slice(0, 10);
+const loadTileImage = (src: string) => new Promise<HTMLImageElement | null>(resolve => {
+  const img = new Image();
+  img.crossOrigin = "anonymous"; // GIBS sends Access-Control-Allow-Origin: *
+  img.onload = () => resolve(img);
+  img.onerror = () => resolve(null);
+  img.src = src;
+});
+
+/**
+ * A daily MODIS true-colour image has black wedges between orbits near the equator (and black polar
+ * night). Each tile fills them the way a mosaic would: Terra → Aqua (same day, orbits ~3 h apart) →
+ * Terra the day before → Blue Marble, so the planet view never shows black stripes.
+ */
+function gapFilledTrueColor(Lf: L, date: string) {
+  const tile = (layer: string, d: string, c: Leaflet.Coords) => `${GIBS}/${layer}/default/${d}/GoogleMapsCompatible_Level9/${c.z}/${c.y}/${c.x}.jpg`;
+  const Layer = Lf.GridLayer.extend({
+    createTile(coords: Leaflet.Coords, done: Leaflet.DoneCallback) {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 256;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+      const sources = [
+        tile("MODIS_Terra_CorrectedReflectance_TrueColor", date, coords),
+        tile("MODIS_Aqua_CorrectedReflectance_TrueColor", date, coords),
+        tile("MODIS_Terra_CorrectedReflectance_TrueColor", dayBefore(date), coords),
+        `${GIBS}/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/${Math.min(coords.z, 8)}/${coords.z > 8 ? coords.y >> 1 : coords.y}/${coords.z > 8 ? coords.x >> 1 : coords.x}.jpeg`,
+      ];
+      (async () => {
+        let out: ImageData | null = null, gap: Uint8Array | null = null;
+        for (let s = 0; s < sources.length; s++) {
+          const img = await loadTileImage(sources[s]);
+          if (!img) continue;
+          ctx.clearRect(0, 0, 256, 256);
+          if (s === 3 && coords.z > 8) ctx.drawImage(img, (coords.x & 1) * 128, (coords.y & 1) * 128, 128, 128, 0, 0, 256, 256);
+          else ctx.drawImage(img, 0, 0, 256, 256);
+          const px = ctx.getImageData(0, 0, 256, 256), d = px.data;
+          // "No data" is pure black in these JPEGs; widen the mask by 2 px to also catch the dark JPEG fringe.
+          const black = new Uint8Array(256 * 256);
+          for (let p = 0; p < black.length; p++) if (Math.max(d[p * 4], d[p * 4 + 1], d[p * 4 + 2]) < 14) black[p] = 1;
+          const mask = new Uint8Array(black.length);
+          for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
+            if (!black[y * 256 + x]) continue;
+            for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+              const yy = y + dy, xx = x + dx;
+              if (yy >= 0 && yy < 256 && xx >= 0 && xx < 256) mask[yy * 256 + xx] = 1;
+            }
+          }
+          if (!out) { out = px; gap = mask; }
+          else {
+            for (let p = 0; p < gap!.length; p++) if (gap![p] && !mask[p]) {
+              out.data.set(d.subarray(p * 4, p * 4 + 4), p * 4);
+              gap![p] = 0;
+            }
+          }
+          if (!gap!.some(v => v)) break;
+        }
+        if (out) ctx.putImageData(out, 0, 0);
+        done(undefined, canvas);
+      })();
+      return canvas;
+    },
+  });
+  const LayerCtor = Layer as unknown as new (o: Leaflet.GridLayerOptions) => Leaflet.GridLayer;
+  return new LayerCtor({ ...FAST, maxNativeZoom: 9, maxZoom: 9, attribution: `${GIBS_ATTRIBUTION} · MODIS Terra + Aqua ${date}, gaps filled` });
+}
+
 /**
  * NASA GIBS imagery for the planetary view. GIBS serves over HTTP/1.1 (≈6 parallel requests,
  * ~0.7 s per tile), so close-up zooms hand over to a CDN imagery layer instead of stalling on black tiles.
@@ -47,7 +113,7 @@ function detailImagery(Lf: L, minZoom: number) {
 export function basemapLayer(Lf: L, kind: Basemap, date?: string) {
   const group = Lf.layerGroup();
   if (kind === "satellite") {
-    retryTiles(Lf.tileLayer(`${GIBS}/MODIS_Terra_CorrectedReflectance_TrueColor/default/${date ?? utcDate(-1)}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`, { ...FAST, maxNativeZoom: 9, maxZoom: 9, attribution: `${GIBS_ATTRIBUTION} · MODIS Terra ${date ?? ""}` })).addTo(group);
+    gapFilledTrueColor(Lf, date ?? utcDate(-1)).addTo(group);
     detailImagery(Lf, 10).addTo(group);
   } else if (kind === "night") {
     retryTiles(Lf.tileLayer(`${GIBS}/VIIRS_Black_Marble/default/2016-01-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png`, { ...FAST, maxNativeZoom: 8, maxZoom: 9, attribution: `${GIBS_ATTRIBUTION} · VIIRS Black Marble 2016` })).addTo(group);
