@@ -10,7 +10,7 @@ const walk = d => { for (const f of readdirSync(d)) { const p = join(d, f); if (
 
 const strings = new Set();
 // Inside marked data tables, skip ids, paths, URLs, colours, CSS classes and SSP codes.
-const isText = s => /\p{L}/u.test(s) && !/^[a-z][a-z0-9-]*$/.test(s) && !/^(\.\.?\/|\/|#|https?:|SSP\d)/.test(s) && !/lazy-loading|^[a-z-]+ [a-z-]+$/.test(s);
+const isText = s => /\p{L}/u.test(s) && !/^[a-z][a-z0-9-]*$/.test(s) && !/^[a-z]+[A-Z][A-Za-z0-9]*$/.test(s) && !/^(\.\.?\/|\/|#|https?:|SSP\d)/.test(s) && !/lazy-loading|^[a-z-]+ [a-z-]+$/.test(s);
 for (const f of files) {
   const src = readFileSync(f, "utf8");
   for (const m of src.matchAll(/\bt\(\s*"((?:[^"\\]|\\.)*)"/g)) strings.add(m[1].replace(/\\"/g, '"'));

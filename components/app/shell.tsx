@@ -17,7 +17,7 @@ import { PlacePicker } from "./place-picker";
 import { ExploreView } from "./explore";
 import { CompareView, FutureView, ReportsView, type Report } from "./views";
 import { DataDialog, StoryDialog } from "./dialogs";
-import { AskEarth, ClimateAtlas, ClimateReport, DisasterMap, SatelliteComparison } from "./lazy";
+import { AskEarth, ClimateAtlas, ClimateReport, DisasterMap, SatelliteComparison, TrendLab } from "./lazy";
 
 const INITIAL = parsePower(dhakaPower);
 const CACHE = new Map<string, ClimateData>([["dhaka", INITIAL]]);
@@ -204,6 +204,7 @@ function App({ initialView }: { initialView: View }) {
 
         <FeatureBoundary key={view} name={view} retryLabel={t("Try again")} message={t("This part of EarthScope hit a problem. The rest of the app still works.")}>
         {view === "explore" && <ExploreView place={place} data={data} year={year} setYear={setYear} playing={playing} setPlaying={setPlaying} layer={layer} setLayer={setLayer} warming={warming} rainChange={rainChange} onSelect={selectPlace} navigate={navigate} openStory={() => setStoryOpen(true)}/>}
+        {view === "trends" && <TrendLab place={place}/>}
         {view === "disasters" && <DisasterMap place={place}/>}
         {view === "atlas" && <ClimateAtlas onOpenPlace={p => { selectPlace(p); navigate("explore"); }}/>}
         {view === "satellite" && <section className="content-panel"><div className="section-heading"><div><span className="eyebrow">{t("THE EARTH REMEMBERS")}</span><h2>{t("{place}, then and now.", { place: place.name })}</h2><p>{t("Measured change from NASA satellites: land cover, vegetation, surface heat and like-for-like imagery from the same season.")}</p></div><span className="source-pill"><Radar size={14}/> NASA GIBS · Landsat · Sentinel-2 · MODIS</span></div><SatelliteComparison place={place} large/></section>}

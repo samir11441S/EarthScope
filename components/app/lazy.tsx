@@ -19,6 +19,7 @@ function withSuspense<P extends object>(Comp: ComponentType<P>, label: string, c
 /* i18n */
 export const EarthGlobe = withSuspense(lazy(() => import("../earth-globe")), "Loading the 3D Earth…", "lazy-loading lazy-globe");
 export const DisasterMap = withSuspense(lazy(() => import("../disaster-map")), "Loading the live disaster map…", "lazy-loading lazy-panel");
+export const TrendLab = withSuspense(lazy(() => import("../trend-lab")), "Loading the Trend Lab…", "lazy-loading lazy-panel");
 export const ClimateAtlas = withSuspense(lazy(() => import("../climate-atlas")), "Loading the climate atlas…", "lazy-loading lazy-panel");
 export const SatelliteComparison = withSuspense(lazy(() => import("../satellite-compare")), "Loading satellite imagery…", "lazy-loading lazy-card");
 export const AskEarth = withSuspense(lazy(() => import("../ask-earth")), "Loading Ask Earth…", "lazy-loading lazy-hidden");

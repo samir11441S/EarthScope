@@ -1,19 +1,20 @@
 "use client";
-import { ArrowUpRight, BookOpen, CircleHelp, Compass, Earth, FileText, FlaskConical, Globe2, Layers3, Siren, Sprout } from "lucide-react";
+import { ArrowUpRight, BookOpen, CircleHelp, Compass, Earth, FileText, FlaskConical, Globe2, Layers3, Siren, Sprout, TrendingUp } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { useI18n } from "@/lib/i18n";
 
-export type View = "explore" | "disasters" | "atlas" | "satellite" | "future" | "compare" | "reports";
+export type View = "explore" | "trends" | "disasters" | "atlas" | "satellite" | "future" | "compare" | "reports";
 
 /** Every page has its own address, so the back button, refresh and shared links all work. */
 export const VIEW_PATH: Record<View, string> = {
-  explore: "/", disasters: "/disasters", atlas: "/atlas", satellite: "/satellite", future: "/future", compare: "/compare", reports: "/reports",
+  explore: "/", trends: "/trends", disasters: "/disasters", atlas: "/atlas", satellite: "/satellite", future: "/future", compare: "/compare", reports: "/reports",
 };
 export const viewFromPath = (path: string): View =>
   (Object.entries(VIEW_PATH).find(([, p]) => p !== "/" && path.replace(/\/$/, "") === p)?.[0] as View) ?? "explore";
 
 /* i18n */export const NAV: { id: View; title: string; icon: typeof Compass; badge?: string }[] = [
   { id: "explore", title: "Earth explorer", icon: Compass },
+  { id: "trends", title: "Trend Lab", icon: TrendingUp, badge: "NEW" },
   { id: "disasters", title: "Live disasters", icon: Siren, badge: "LIVE" },
   { id: "atlas", title: "Climate atlas", icon: Earth, badge: "MAPS" },
   { id: "satellite", title: "Satellite comparison", icon: Layers3 },
@@ -24,6 +25,7 @@ export const viewFromPath = (path: string): View =>
 
 /* i18n */export const HEADINGS: Record<View, [string, string]> = {
   explore: ["Every place has a climate story.", "Travel through time. Understand your world. Imagine what comes next."],
+  trends: ["Be an Earth system trend detective.", "What is changing, where, how much — and is it significant? Every NASA variable, every grid cell and satellite pixel, tested honestly."],
   disasters: ["The planet, right now.", "Live storms, floods, earthquakes and fires from NASA, GDACS and USGS — and the safer places around you."],
   atlas: ["Every country. Every state. Every year.", "Zoom from the whole Earth into a country and its states, and watch 45 years of NASA climate data unfold."],
   satellite: ["See change with your own eyes.", "Measured change from NASA satellites: land cover, vegetation, surface heat and like-for-like imagery."],

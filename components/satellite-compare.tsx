@@ -4,6 +4,8 @@ import { CircleHelp, Clapperboard, Columns2, ImageIcon, Layers3, LoaderCircle, P
 import { RangeControl as Slider } from "./range-control";
 import type { Place } from "@/lib/climate";
 import { useI18n } from "@/lib/i18n";
+import { loadImage, pixels } from "@/lib/pixels";
+export { pixels };
 import { compareLandCover, compareLst, coverShares, compareNdvi, COVER_META, HEAT_RAMP, LANDCOVER_LEGEND, LANDCOVER_YEARS, LST_REL_THRESHOLD, lstComposites, ndviComposites, renderLst, type CoverChange, type CoverGroup, type CoverStats, type LstChange, type NdviChange } from "@/lib/earth-change";
 
 // Satellite comparison, rebuilt for like-for-like accuracy:
@@ -36,34 +38,6 @@ const range = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i)
 
 const img = (p: Place, layer: string, date: string, span: number, size: number, extra = "") =>
   `/api/imagery?lat=${p.lat}&lon=${p.lon}&date=${date}&layer=${layer}&span=${span}&size=${size}${extra}`;
-
-function loadImage(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const el = new Image();
-    el.decoding = "async";
-    el.onload = () => resolve(el);
-    el.onerror = () => reject(new Error("image failed"));
-    el.src = src;
-  });
-}
-const pixelCache = new Map<string, Promise<ImageData>>();
-/** Pixels of a same-origin image (from Terra's /api/imagery), cached. */
-export function pixels(src: string, size: number) {
-  let job = pixelCache.get(src);
-  if (!job) {
-    job = loadImage(src).then(el => {
-      const c = document.createElement("canvas");
-      c.width = c.height = size;
-      const ctx = c.getContext("2d", { willReadFrequently: true })!;
-      ctx.imageSmoothingEnabled = false; // categorical colours must not be blended
-      ctx.drawImage(el, 0, 0, size, size);
-      return ctx.getImageData(0, 0, size, size);
-    });
-    job.catch(() => pixelCache.delete(src));
-    pixelCache.set(src, job);
-  }
-  return job;
-}
 
 /** Fraction of ground pixels: not empty (outside the swath) and not bright cloud. */
 async function clearFraction(src: string) {

@@ -18,12 +18,16 @@ const LAYERS = {
   ndvi16: { name: "MODIS_Terra_L3_NDVI_16Day", format: "image/png", span: 0.4 }, // MOD13Q1, 16-day composites
   false721: { name: "MODIS_Terra_CorrectedReflectance_Bands721", format: "image/jpeg", span: 0.8 }, // water dark blue, cities magenta
   lst8: { name: "MODIS_Terra_L3_Land_Surface_Temp_8Day_Day", format: "image/png", span: 0.4 }, // MOD11A2, colour map MODIS_Land_Surface_Temp (0.6 K steps)
+  // Monthly products for multi-year pixel trends (Trend Lab), date = first day of the month.
+  lstMonthDay: { name: "MODIS_Terra_L3_Land_Surface_Temp_Monthly_Day", format: "image/png", span: 2.2 },
+  lstMonthNight: { name: "MODIS_Terra_L3_Land_Surface_Temp_Monthly_Night", format: "image/png", span: 2.2 },
+  ndviMonth: { name: "MODIS_Terra_L3_NDVI_Monthly", format: "image/png", span: 2.2 },
 } as const;
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams, latText = params.get("lat"), lonText = params.get("lon");
   const lat = Number(latText), lon = Number(lonText), date = params.get("date") || "2025-01-20";
-  const layerType = (params.get("layer") || "truecolor").toLowerCase();
+  const layerType = params.get("layer") || "truecolor";
   const sensor = params.get("sensor") === "L30" ? "L30" : "S30";
   const key = (layerType === "hls" ? `hls_${sensor}` : layerType) as keyof typeof LAYERS;
   const layer = LAYERS[key];
