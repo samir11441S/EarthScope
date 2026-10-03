@@ -1,198 +1,92 @@
 # EarthScope — Climate Time Machine
 
-**NASA Space Apps Challenge 2026 entry.** EarthScope turns NASA Earth-observation data into a personal climate story: travel through 26 years of observations for any place, watch every country and state change year by year, and see the disasters happening on the planet right now, along with the safer places around you.
+[![Live app](https://img.shields.io/badge/live-earthscope--climate.vercel.app-2f8cff)](https://earthscope-climate.vercel.app)
+![Tests](https://img.shields.io/badge/tests-41%20passing-34c759)
+![Languages](https://img.shields.io/badge/UI-English%20%C2%B7%20%E0%A6%AC%E0%A6%BE%E0%A6%82%E0%A6%B2%E0%A6%BE-38b6ff)
 
-## Features
+**NASA Space Apps Challenge 2026 entry, built with Dhaka in mind.** EarthScope turns NASA Earth observations into a climate story you can check for yourself. It covers 45 years of climate data for any place, the disasters happening on the planet right now and the safer places near you, measured land and surface-heat change from satellites, and what the IPCC says about sea level. Everything works in English and বাংলা.
 
-| View | What it does | Data |
+![EarthScope link preview](public/og.png)
+
+## What you can do
+
+| Page | What it does | Data |
 |---|---|---|
-| **Earth explorer** | 3D globe, climate metrics, trend detective (°C/decade, R²) for any place | NASA POWER (MERRA-2), NASA GISTEMP latitude bands |
-| **Live disasters** | Only what is happening now: events first reported in the last 24 h, events still active and recently updated, and official cyclone forecasts (track with times, uncertainty cone, wind zones). Exact positions (USGS epicentres, latest cyclone fixes), current alert levels, measured footprints (cyclone wind zones, mapped flood areas); VIIRS fire and GPM rain overlays | NASA EONET, GDACS, USGS, NASA GIBS |
-| **Am I safe?** | Checks your GPS location, a chosen city or a map click against every active hazard zone, gives protective actions, the way out of the zone, and the nearest shelters, hospitals and assembly points *outside* the zones, with walking routes | OpenStreetMap via Overpass |
-| **Climate atlas** | Choropleth map: World → country → states/provinces → districts. Temperature change, mean temperature, rainfall change and annual rainfall for every year 1981–2025, with play-through animation, climate stripes, fastest-warming rankings and MODIS imagery of the selected year | NASA POWER regional grid, Natural Earth, geoBoundaries |
-| **Satellite comparison** | Before/after at 30 m: Landsat yearly cloud-free composites (1985/1990/2000) vs the clearest Landsat 8/9 or Sentinel-2 pass near any date since 2013 (automatic cloud search), plus MODIS and NDVI modes, zoom levels and haze removal | NASA GIBS (Landsat WELD, HLS, MODIS) |
-| **Future scenarios** | Transparent what-if warming and rainfall sliders to 2050 | User-defined, applied to 2025 observations |
-| **Compare places · Reports** | Side-by-side cities and PDF climate reports | NASA POWER |
+| **Earth explorer** `/` | Realistic 3D globe with day/night lighting, city lights and **real cloud cover from two days ago, rebuilt every day**; climate metrics and a trend detective for any place; an independent **ERA5 cross-check** of every record | NASA POWER (MERRA-2), ECMWF ERA5, NASA GIBS VIIRS, GISTEMP |
+| **Live disasters** `/disasters` | Storms, floods, earthquakes and fires happening now, cyclone forecast tracks and cones, NASA flood, fire, rain, population and **aerosol** layers. **Am I safe?** checks a location against every hazard zone and lists protective actions, the way out, and the nearest shelters and hospitals *outside* the zones. It also shows a heat outlook and **air quality** (CAMS 5-day forecast, US AQI, WHO PM2.5 guideline), *My places* alerts, and an offline safety pack | NASA EONET, GDACS, USGS, NASA GIBS, Open-Meteo, CAMS, OpenStreetMap |
+| **Climate atlas** `/atlas` | World → country → state → district choropleths for 1981–2025, with play-through, climate stripes and fastest-warming rankings | NASA POWER grid, Natural Earth, geoBoundaries |
+| **Satellite comparison** `/satellite` | Measured change between two years: **land cover** (MODIS MCD12Q1), **vegetation** (NDVI), **surface heat** (MODIS land-surface temperature, with hot-spot intensity and a change map relative to the area-wide shift), and like-for-like 30 m imagery (Landsat/Sentinel-2 HLS) | NASA GIBS |
+| **Future scenarios** `/future` | Transparent what-if sliders to 2050, plus **IPCC AR6 sea-level projections** next to the place's ground height | IPCC AR6 WGI Table 9.9, Copernicus GLO-90 DEM |
+| **Compare places** `/compare` | Two climate records side by side with honest statistics | NASA POWER |
+| **Climate reports** `/reports` | An 8-page A4 assessment in English or বাংলা for citizens, students or planners, with PDF, CSV and a QR share link | All of the above |
+| **Ask Earth** | A grounded AI guide (Claude, or a free open model) that answers in the interface language from EarthScope's data and live feeds, with an offline rule-based fallback | — |
 
-## Ask Earth — grounded AI assistant
+Every page has its own URL, and the heavy parts (three.js, Leaflet, the report) load only when they are needed.
 
-Ask Earth answers questions in English or বাংলা about the selected place, live disasters, safe places and the global record.
+## Why you can trust the numbers
 
-- **Free AI mode** (default, no key needed): a free open model (GPT-OSS 20B via Pollinations’ keyless tier) writes the answer. EarthScope first fetches the live data the question needs — hazards, shelters, heat forecast, another place’s record — and the model answers only from that data plus the context pack below. Any OpenAI-compatible free service (e.g. Groq, Gemini) can be plugged in with environment variables.
-- **Claude mode** (when `ANTHROPIC_API_KEY` is set): Claude (`claude-opus-5-5`, streaming, low effort) answers with the same context pack and calls EarthScope’s tools itself: `get_climate_record`, `get_live_hazards`, `find_safe_places`, `get_heat_outlook`, `get_global_climate`.
-- **Both AI modes** get a context pack computed by EarthScope — the place’s break-tested NASA POWER trends with confidence intervals, the GISTEMP/NSIDC/NOAA global record and IPCC AR6 reference values — remember recent turns, stream their answers, cite sources and suggest follow-ups. AI questions are rate-limited per visitor.
-- **Offline mode** (AI unavailable or rate limit reached): a deterministic guide computed from the same data, including live hazard, shelter, heat and place-comparison lookups.
+- **Break-tested records.** NASA POWER is a reanalysis, and reanalyses jump when the observations they assimilate change. Over Bangladesh, POWER drops by about 1 °C in 1997. EarthScope tests every series for such steps with a two-phase regression (Lund & Reeves 2002, 99% level, Monte Carlo critical values). It trends only the consistent part and says so on screen ([lib/homogeneity.ts](lib/homogeneity.ts)).
+- **Independent cross-check.** Each place is compared with ECMWF ERA5, which comes from a different model and assimilation system. The comparison reports correlation, bias and trends, and runs the break test on the POWER − ERA5 difference series. That test confirms whether a step is a dataset artefact ([lib/crosscheck.ts](lib/crosscheck.ts)). For Dhaka it confirms the 1997 artefact, and ERA5 shows +0.21 °C per decade over 1981–2025.
+- **Honest statistics.** Trends are least-squares slopes with 95% confidence intervals and an autocorrelation-corrected t-test (Santer et al. 2000). A change is called warming or cooling only when p < 0.05.
+- **Exact satellite decoding.** NASA GIBS renders measured products with fixed colour maps. EarthScope decodes every pixel back to its land-cover class, NDVI or temperature (0.6 K steps) instead of guessing from colours.
+- **Clear limits.** Hazard zones are screening estimates, not official warnings. Scenarios are labelled what-ifs, not CMIP6 output. Sea-level numbers are global means, and the app notes the delta's land subsidence.
+- **Tested.** 41 automated tests cover the statistics, break detection (including a regression test on the real Dhaka record), the ERA5 cross-check, colour-map decoding, Bangla dictionary parity, sea level, extremes indices and share-link safety.
 
-Switch to Claude on Vercel (optional):
+## বাংলা
 
-```sh
-vercel env add ANTHROPIC_API_KEY production
-vercel deploy --prod
-```
-
-Optional settings are listed in [.env.example](.env.example).
-
-## Climate report
-
-**Export report** (or *My climate reports → Create current report*) builds an 8-page A4 local climate assessment from NASA data ([components/climate-report.tsx](components/climate-report.tsx), [lib/report](lib/report)):
-
-- **Cover, key findings and "at a glance"**, written with IPCC calibrated likelihood language (probability that the trend's sign is right, 1 − p/2) and a data-quality note for any detected step in the record.
-- **Climate record**: annual temperature and rainfall charts with the excluded pre-break years greyed, the trend line and its 95% range, decade means, and this place's warming rate next to the global and Arctic rates (NASA GISTEMP) over the same years.
-- **Climate extremes** from NASA POWER *daily* data, after WMO ETCCDI: hot days ≥ 35 °C, warm nights ≥ 25 °C, humid-heat days (daily-mean wet-bulb ≥ 27 °C), frost days, hottest day, heavy-rain days ≥ 50 mm, wettest day and longest dry spell ([lib/extremes.ts](lib/extremes.ts), [/api/extremes](app/api/extremes/route.ts)). They are computed only over the same break-tested years as the annual means.
-- **Satellite evidence**: MODIS land cover 2001 vs 2024 with change map and class table, and same-season NDVI change.
-- **Risk profile with evidence**: each risk (humid heat, urban heat island, extreme rain, drought, coastal/cyclone exposure, vegetation loss, cold, warming, live hazards) is flagged only when a measured indicator crosses a stated threshold, lists the numbers and sources behind it, and gives priority actions.
-- **Right now**: hazards within 500 km, the 7-day heat outlook (NWS heat index, BMD heatwave classes), the nearest shelters and hospitals (OpenStreetMap) and official warning services. The section is time-stamped.
-- **Methods, sources and limitations**, a citation line and a QR code / share link that reopens the same view (coordinates rounded to ~1 km).
-- **English or বাংলা** (with Bangla digits) for three audiences: *Citizen* (short, practical), *Student* (explains every chart, plus a glossary) and *Planner* (full statistics tables and ETCCDI codes).
-- **Save as PDF** uses the browser's print engine, so Bangla script is shaped correctly and the charts stay vector. **Data (CSV)** downloads every annual value behind the report. Saved reports keep their data snapshot and can be refreshed with the latest data.
-
-## How the numbers are made
-
-- **State and district values** are area averages of every NASA POWER grid cell (0.5° × 0.625°) whose centre lies inside the boundary, weighted by cos(latitude). Regions smaller than one cell use the nearest cell. The server fetches 10° tiles from the POWER regional API ([app/api/power-grid](app/api/power-grid/route.ts)) and the browser does the averaging ([components/climate-atlas.tsx](components/climate-atlas.tsx)).
-- **Country values** (world view) are precomputed by `node scripts/build-world-climate.mts`, which samples up to 8 points inside each Natural Earth country, into `public/data/world-*.json`.
-- **Record period**: NASA POWER 1981–2025. Every local series is screened for abrupt, non-climatic steps with a two-phase regression break test (Lund & Reeves 2002, 99% level, critical values by Monte Carlo); years before a step are excluded. Over the Bengal delta, NASA POWER shows a ≈−1 °C step around 1997 and a rainfall step around 2016 — artefacts of changes in the observations MERRA-2 assimilates, which EarthScope detects and removes rather than reporting as climate change.
-- **Trends** are least-squares slopes with 95% confidence intervals and an autocorrelation-corrected t-test (effective sample size, Santer et al. 2000). A trend is called warming/cooling only when p < 0.05.
-- **Temperature/rainfall change** compares the first and last decade of the consistent record (needs ≥ 20 consistent years). Optional 5-year smoothing reduces year-to-year weather noise on the map.
-- **Global context** (globe, Ask Earth): NASA GISTEMP v4, NSIDC Sea Ice Index v4 and NOAA Mauna Loa CO₂, regenerated from the agencies’ files by `node scripts/build-global-record.mts`. Years after 2025 are a labelled trend extrapolation, shown alongside the IPCC AR6 SSP2-4.5 assessment — not model output.
-- **Impact zones** in the disaster map are simple distance estimates from magnitude, wind speed or alert level ([lib/hazards.ts](lib/hazards.ts)). They are a screening aid, **not an official warning**; always follow your national disaster authority.
-
-## Data sources & credits
-
-NASA POWER · NASA GIBS (Blue Marble, Landsat WELD, HLS Landsat/Sentinel-2, MODIS Terra, VIIRS Black Marble, VIIRS active fires, GPM IMERG) · NASA EONET · NASA GISTEMP · GDACS (UN / European Commission JRC) · USGS Earthquake Hazards Program · OpenStreetMap contributors (ODbL) via Overpass · geoBoundaries (CC BY 4.0 / CC0) · Natural Earth (public domain) · Open-Meteo geocoding · close-zoom map imagery and labels © Esri, Maxar, Earthstar Geographics.
+The whole interface, the climate report and Ask Earth's answers are available in Bangla, with Bangla digits throughout. Strings live in [lib/i18n-bn.ts](lib/i18n-bn.ts), keyed by their English source text. `npm run i18n:check` lists any untranslated string, and the test suite fails if one is missing.
 
 ## Run it
 
+Requires Node.js 22.13 or later.
+
 ```sh
-npm run install:ci   # or npm install
+npm install
 npm run dev          # http://localhost:5173
-npm run build        # production build (Cloudflare Worker)
+npm test             # 41 unit tests (Vitest)
+npm run lint
+npm run build        # Cloudflare Worker build (vinext)
+npx next build       # Vercel / Node build
 ```
 
----
+No API keys are needed. All data sources are open, and Ask Earth falls back to a free model or the offline guide. Optional settings are listed in [.env.example](.env.example):
 
-## Development platform notes (vinext starter)
+| Variable | Purpose |
+|---|---|
+| `ANTHROPIC_API_KEY` | Ask Earth answers with Claude and calls EarthScope's tools itself |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Rate limits shared by all serverless instances (otherwise per instance) |
+| `CRON_SECRET` | Protects the daily cloud-map warm-up cron (`vercel.json`) |
+| `ASK_EARTH_RATE_LIMIT`, `ASK_EARTH_DAILY_LIMIT` | AI question limits |
+| `NEXT_PUBLIC_SITE_URL` | Public URL for link previews |
 
-A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
-
-## Prerequisites
-
-- Node.js `>=22.13.0`
-- Portable: Windows, macOS, or Linux; no Bash required
-- Managed Linux: managed Linux runtime with Bash, `flock`, `curl`, `sha256sum`, and GNU `timeout`
-- Git is required only for publishing
-
-## Sites Lifecycle
-
-The Sites initializer copies the shared starter and selects managed-linux only when `SITES_MANAGED_LINUX_CONTAINER=1`; otherwise it selects portable. It saves the selection only in ignored `.sites-runtime/execution-profile.json`. Both profiles copy/configure first, then use the plugin's separate `install-dependencies.mjs` step to measure installation independently. Edit source under `app/` and follow the Sites skill for installation, preview, builds, and publishing.
-
-Run `node <plugin-root>/scripts/configure-execution-profile.mjs` only when the profile is unknown for the current checkout and environment. Profile changes do not alter tracked source or require reinstalling otherwise-valid dependencies; restart an existing preview to use the new selection. Do not commit or upload `.sites-runtime/`.
-
-This starter does not use `wrangler.jsonc`.
-
-`install:ci` runs `npm ci` once against the shared lockfile, disables parent-workspace discovery, and includes required dev/optional dependencies despite production/omit settings. Sharp defaults to prebuilt binaries unless explicitly configured otherwise. Do not overlap installers.
-
-- **Portable:** Preserve host HOME, npm cache, registry, proxy, temporary paths, retry/concurrency settings, and lifecycle-script policy. Use `--prefer-offline --no-audit --no-fund`.
-- **Managed Linux:** Use the existing project-local HOME/cache/tmp setup and Linux install lock, tarball preflight, and timeout. Restore the image-seeded npm cache only when its lockfile hash matches; retain network fallback. Builds keep their existing timeout. These helpers are not invoked by the portable profile.
-
-`scripts/sites-env.mjs` preserves the caller's HOME, npm cache, proxy, XDG, and temporary-directory configuration while defaulting Wrangler and Miniflare state to the checkout. If npm reports an unwritable cache, select a writable path with `npm_config_cache` for that install. The `dev` and `start` scripts also keep Wrangler logs inside the checkout. Generated `.sites-runtime/` and `.wrangler/` directories are disposable and ignored by Git.
-
-On portable, `npm run dev` uses `vinext dev` with HMR, starting at port 5173. Vinext records the running server in ignored `.vinext/` state, rejects an ordinary duplicate launch, and recovers stale state after a stopped process; exactly simultaneous starts can race. Pass `--port <port>` or `--hostname <host>` after `npm run dev --` when needed; keep portable previews on loopback.
-
-For browser QA on managed Linux, use `sites-preview start`. The project's dev script runs Vite and accepts the supervisor's `--host 0.0.0.0 --port 4173 --strictPort` arguments. The internal browser uses `http://terminal.local:4173/`; it is not a user-facing URL. The supervisor owns the preview lifecycle. The ignored local profile survives the supervisor's cleared process environment.
-
-The portable profile simulates ChatGPT sign-in only for loopback development requests. Visit `/signin-with-chatgpt?return_to=/` to sign in as `local_seedy` (`seedy@sites.test`, display name `Seedy`) and `/signout-with-chatgpt?return_to=/` to sign out. The development cookie preserves that identity across server restarts. Mock auth is disabled in the managed-linux profile and is not included in production builds; hosted authentication remains dispatch-owned.
-
-The Worker uses `vinext/server/fetch-handler`, including Vinext's config-aware image handling. After building, `npm start` runs that Worker locally through Wrangler on `127.0.0.1`, sharing `.wrangler/state` with dev preview and local D1 migrations; it does not deploy the site or simulate sign-in. Use the URL printed by the server. Pass `npm start -- --port <port>` to select a different built-preview port.
-
-Local previews use Miniflare's placeholder `Request.cf` metadata without a network lookup. Set `CLOUDFLARE_CF_FETCH_ENABLED=true` to opt into fetching preview metadata; this setting does not change hosted request metadata.
-
-Local tool usage metrics are disabled by default. Set `WRANGLER_SEND_METRICS=true` to opt in.
-
-## Included Shape
-
-- edit site code under `app/`
-- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
-- `db/schema.ts` starts intentionally empty
-- `@cloudflare/workers-types` provides Worker types; `cloudflare-env.d.ts` declares optional `DB`/`BUCKET` bindings—update these declarations if binding names change
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
-
-## Workspace Auth Headers
-
-Signed-in visitors receive both `oai-authenticated-user-id` and `oai-authenticated-user-email`. Private Sites require every visitor to sign in; public Sites may also have anonymous visitors, for whom neither header is present.
-
-The user ID is stable for the same user on the same Site and different across Sites. Use it as the durable user key; use email and name for display or contact purposes.
-
-SIWC-authenticated workspace sites may also receive `oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty `name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by `oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const userId = requestHeaders.get("oai-authenticated-user-id");
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
-```
-
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use the returned `userId` as the stable user key for user-owned records; do not use email as a durable identifier.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send anonymous visitors through Sign in with ChatGPT.
-- In a Server Component, start sign-in with `<a href={chatGPTSignInPath(returnTo)} target="_top">`. The auth helper module is server-only; do not import it into a Client Component.
-- Do not use `fetch`, XHR, a client-side router, or a framework link that can prefetch the sign-in route. SIWC must start as a top-level navigation.
-- Never request the AuthAPI authorization endpoint directly. The dispatch-owned `/signin-with-chatgpt` route must start the SIWC flow.
-- Use `chatGPTSignOutPath(returnTo)` for browser sign-out links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the OAuth cookies, and identity header injection. Do not implement app routes for those reserved paths. Routes that do not import and call the helper remain anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the Sites hosting platform's access policy controls for workspace-wide restrictions, or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Local D1 migrations
-
-For a D1-backed local preview, generate SQL with `npm run db:generate`. Build once through the Sites skill's build entrypoint (or `npm run build` for standalone use) to generate `dist/server/wrangler.json`, rebuilding if bindings change. From the project root, apply each pending migration in order:
+Maintenance scripts (all data comes straight from the agencies):
 
 ```sh
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_example.sql
+node scripts/build-globe-textures.mts   # Blue Marble, Black Marble and the fallback cloud map
+node scripts/build-global-record.mts    # GISTEMP, NSIDC sea ice, NOAA CO₂
+node scripts/build-world-climate.mts    # country climate series for the atlas
+node scripts/build-og-image.mjs         # link-preview image
 ```
 
-Replace the filename with the pending migration and `DB` with your D1 binding name if different. Use `.wrangler/state`, not `.wrangler/state/v3`; Wrangler adds the versioned directories. Do not replay migrations already applied locally. This updates only the preview database; publishing applies production migrations separately.
+## Architecture
 
-## Diagnostic Commands
+```
+app/                 Next.js app router: one page per view, API routes under app/api/*
+  api/climate        NASA POWER monthly record        api/crosscheck  ECMWF ERA5 annual series
+  api/disasters      EONET + GDACS + USGS feed        api/air         CAMS air quality
+  api/clouds         daily cloud mask (+ /warm cron)  api/imagery     NASA GIBS snapshots
+  api/ask            Ask Earth (streaming NDJSON)     api/log         client error reports
+components/app/      shell (routing, language, state), nav, explore, views, dialogs, lazy loaders
+components/          globe, disaster map, atlas, satellite comparison, report, Ask Earth
+lib/                 science and data code: stats, homogeneity, crosscheck, earth-change,
+                     extremes, sea-level, air-quality, clouds, hazards, i18n, report model
+tests/               Vitest unit tests
+```
 
-- `npm run install:ci`: perform the one locked dependency install
-- `npm run dev`: start the Vite/Vinext development server
-- `npm run build`: build the deployable Sites artifact
-- `npm run start`: preview the built Worker locally with D1/R2 support
-- `npm run db:generate`: generate Drizzle migrations after schema changes
+Production safeguards include per-visitor rate limits on every costly endpoint, CDN caching that matches how often each source changes, error boundaries around each feature, and client errors reported to `/api/log`. A service worker makes the app installable and keeps the last safety check available offline.
 
-When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
+## Data sources & credits
 
-The portable build runs Vinext directly without a host `timeout` command. The managed-linux build uses `scripts/build-verified.sh` and its existing `SITES_BUILD_TIMEOUT` setting.
+NASA POWER · NASA GIBS (Blue Marble, Black Marble, VIIRS, MODIS land cover, NDVI, land-surface temperature and aerosol optical depth, Landsat/Sentinel-2 HLS, GPM IMERG, LANCE flood product, SEDAC population) · NASA EONET · NASA GISTEMP · NSIDC Sea Ice Index · NOAA GML CO₂ · ECMWF ERA5 and Copernicus CAMS (via Open-Meteo) · IPCC AR6 WGI · Copernicus GLO-90 DEM · GDACS (UN / European Commission JRC) · USGS Earthquake Hazards Program · OpenStreetMap contributors (ODbL) · geoBoundaries · Natural Earth · Open-Meteo geocoding and forecasts · close-zoom imagery © Esri, Maxar, Earthstar Geographics.
 
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+EarthScope is an educational tool, not an official warning service. In Bangladesh, follow the Bangladesh Meteorological Department and the Department of Disaster Management, and call **999** in an emergency.
