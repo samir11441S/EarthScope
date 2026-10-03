@@ -343,7 +343,7 @@
 .view-seg button{display:flex;align-items:center;gap:5px;background:none;border:0;border-radius:6px;padding:6px 10px;color:#92a6c1;font-size:11.5px}
 .view-seg button.on{background:#32a6ff;color:#0a142b}
 .sat-body{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
-.sat-view{min-width:0}
+.sat-view{min-width:0;position:relative}
 .satellite-comparison.large .comparison-image{height:auto;aspect-ratio:1/1;max-height:640px;width:100%;margin:0 auto}
 .sat-side{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .satellite-comparison.large .sat-side .comparison-image{aspect-ratio:1/1;max-height:none}
@@ -405,3 +405,10 @@
 .crosscheck-grid b{color:#eef3fa;font-weight:600;font-variant-numeric:tabular-nums}
 .crosscheck-note p{margin:0 0 8px}
 .crosscheck-source{font-size:10.5px;color:#6f86a5}
+/* Land-cover map key and photo underlay */
+.sat-under{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sat-image img:not(.sat-under){position:relative;z-index:1}
+.lc-legend{position:absolute;left:12px;bottom:12px;z-index:4;max-width:min(62%,460px);display:flex;flex-wrap:wrap;gap:4px 11px;background:#050b1bd9;backdrop-filter:blur(6px);border:1px solid #ffffff1f;border-radius:9px;padding:7px 10px;font-size:10.5px;line-height:1.35;color:#dbe6f3;pointer-events:auto}
+.lc-legend span{display:inline-flex;align-items:center;gap:5px;cursor:default}
+.lc-legend i{width:10px;height:10px;border-radius:2px;flex:none;box-shadow:0 0 0 1px #0006}
+@media (max-width:640px){.lc-legend{max-width:calc(100% - 24px);font-size:9.5px}}

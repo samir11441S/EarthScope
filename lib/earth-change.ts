@@ -34,15 +34,37 @@ const IGBP: Record<string, { name: string; group: CoverGroup }> = {
 };
 
 /* i18n */export const COVER_META: Record<CoverGroup, { label: string; color: string }> = {
-  built: { label: "Built-up (urban)", color: "#ff3b30" },
-  cropland: { label: "Cropland", color: "#f2d64b" },
-  forest: { label: "Forest", color: "#2f9e44" },
-  shrubGrass: { label: "Shrub, savanna & grass", color: "#c9a96e" },
+  // Same colours as NASA's land-cover map, so the table and the map read together.
+  built: { label: "Built-up (urban)", color: "#ff0000" },
+  cropland: { label: "Cropland", color: "#faef73" },
+  forest: { label: "Forest", color: "#31cc31" },
+  shrubGrass: { label: "Shrub, savanna & grass", color: "#ffd500" },
   wetland: { label: "Wetland", color: "#4783b5" },
   water: { label: "Water", color: "#86cae3" },
   barren: { label: "Barren / snow", color: "#bfbfbd" },
 };/* /i18n */
 const GROUPS = Object.keys(COVER_META) as CoverGroup[];
+
+/** Map key: every IGBP class in the colour GIBS draws it, with plain-language labels. */
+/* i18n */export const LANDCOVER_LEGEND: { rgb: string; label: string; hint?: string }[] = [
+  { rgb: "255,0,0", label: "Urban and built-up" },
+  { rgb: "250,239,115", label: "Cropland" },
+  { rgb: "153,147,86", label: "Cropland / natural mosaic", hint: "Fields mixed with trees and villages (homestead gardens)." },
+  { rgb: "255,213,0", label: "Savanna", hint: "In Bangladesh MODIS often labels mixed rice fields, homestead trees and seasonally flooded land as savanna." },
+  { rgb: "218,235,157", label: "Woody savanna" },
+  { rgb: "240,185,103", label: "Grassland" },
+  { rgb: "186,141,141", label: "Closed shrubland" },
+  { rgb: "245,222,179", label: "Open shrubland" },
+  { rgb: "49,204,49", label: "Evergreen broadleaf forest" },
+  { rgb: "150,250,150", label: "Deciduous broadleaf forest" },
+  { rgb: "141,186,141", label: "Mixed forest" },
+  { rgb: "33,138,33", label: "Evergreen needleleaf forest" },
+  { rgb: "152,204,49", label: "Deciduous needleleaf forest" },
+  { rgb: "71,131,181", label: "Permanent wetland" },
+  { rgb: "134,202,227", label: "Water" },
+  { rgb: "191,191,189", label: "Barren" },
+  { rgb: "255,255,255", label: "Snow and ice" },
+];/* /i18n */
 
 export interface CoverStats { valid: number; share: Record<CoverGroup, number> } // shares in %, valid = pixel count
 export interface CoverChange {
@@ -51,6 +73,8 @@ export interface CoverChange {
   toBuiltPct: number; // % of comparable pixels that became built-up
   overlay: ImageData; // change map: newly built red, lost vegetation orange, gained vegetation green, water change blue
   pixelKm2: number;
+  present: string[]; // IGBP colours ("r,g,b") that appear in either year, most common first
+
 }
 
 const groupAt = (d: Uint8ClampedArray, i: number): CoverGroup | null => (d[i + 3] < 128 ? null : IGBP[`${d[i]},${d[i + 1]},${d[i + 2]}`]?.group ?? null);
@@ -67,6 +91,12 @@ function shares(d: Uint8ClampedArray): CoverStats {
 export function compareLandCover(a: ImageData, b: ImageData, areaKm2: number): CoverChange {
   const overlay = new ImageData(a.width, a.height), o = overlay.data;
   let both = 0, changed = 0, toBuilt = 0;
+  const seen = new Map<string, number>();
+  for (const d of [a.data, b.data]) for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] < 128) continue;
+    const k = `${d[i]},${d[i + 1]},${d[i + 2]}`;
+    if (k in IGBP) seen.set(k, (seen.get(k) ?? 0) + 1);
+  }
   for (let i = 0; i < a.data.length; i += 4) {
     const ga = groupAt(a.data, i), gb = groupAt(b.data, i);
     if (!ga || !gb) continue;
@@ -84,6 +114,7 @@ export function compareLandCover(a: ImageData, b: ImageData, areaKm2: number): C
     a: shares(a.data), b: shares(b.data),
     changedPct: both ? (changed / both) * 100 : 0, toBuiltPct: both ? (toBuilt / both) * 100 : 0,
     overlay, pixelKm2: areaKm2 / (a.width * a.height),
+    present: [...seen].filter(([, n]) => n >= 4).sort((x, y) => y[1] - x[1]).map(([k]) => k),
   };
 }
 

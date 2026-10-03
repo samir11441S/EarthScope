@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CircleHelp, Columns2, Layers3, LoaderCircle, ScanSearch, Sparkles, SplitSquareHorizontal, Waypoints } from "lucide-react";
+import { CircleHelp, Columns2, ImageIcon, Layers3, LoaderCircle, ScanSearch, Sparkles, SplitSquareHorizontal, Waypoints } from "lucide-react";
 import { RangeControl as Slider } from "./range-control";
 import type { Place } from "@/lib/climate";
 import { useI18n } from "@/lib/i18n";
-import { compareLandCover, compareLst, compareNdvi, COVER_META, HEAT_RAMP, LANDCOVER_YEARS, LST_REL_THRESHOLD, lstComposites, ndviComposites, renderLst, type CoverChange, type CoverGroup, type LstChange, type NdviChange } from "@/lib/earth-change";
+import { compareLandCover, compareLst, compareNdvi, COVER_META, HEAT_RAMP, LANDCOVER_LEGEND, LANDCOVER_YEARS, LST_REL_THRESHOLD, lstComposites, ndviComposites, renderLst, type CoverChange, type CoverGroup, type LstChange, type NdviChange } from "@/lib/earth-change";
 
 // Satellite comparison, rebuilt for like-for-like accuracy:
 //   • Land cover — NASA MODIS MCD12Q1 (official yearly classification), measured shares + change map.
@@ -154,7 +154,14 @@ function enhanced(src: string) {
   return job;
 }
 
-function Picture({ src, alt, enhance = false, pixelated = false, waiting }: { src: string | null; alt: string; enhance?: boolean; pixelated?: boolean; waiting?: string }) {
+/** Present-day high-resolution photo of the same square, for laying measured maps over real streets and fields. */
+const photoUrl = (p: Place, span: number) => {
+  const halfLat = span / 2, halfLon = halfLat / Math.max(0.2, Math.cos((p.lat * Math.PI) / 180)); // same square as /api/imagery
+  return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=${p.lon - halfLon},${p.lat - halfLat},${p.lon + halfLon},${p.lat + halfLat}&bboxSR=4326&imageSR=4326&size=1024,1024&format=jpg&f=image`;
+};
+const inBangladesh = (p: Place) => p.lat >= 20.5 && p.lat <= 26.7 && p.lon >= 88 && p.lon <= 92.7;
+
+function Picture({ src, alt, enhance = false, pixelated = false, waiting, under }: { src: string | null; alt: string; enhance?: boolean; pixelated?: boolean; waiting?: string; under?: string | null }) {
   const [shown, setShown] = useState<{ from: string; url: string } | null>(null);
   const [state, setState] = useState<{ url: string; ok: boolean } | null>(null);
   useEffect(() => {
@@ -169,7 +176,9 @@ function Picture({ src, alt, enhance = false, pixelated = false, waiting }: { sr
   const { t } = useI18n();
   return <div className="sat-image">
     {/* eslint-disable-next-line @next/next/no-img-element */}
-    {url && <img key={url} src={url} alt={alt} onLoad={() => setState({ url, ok: true })} onError={() => setState({ url, ok: false })} style={{ opacity: ok ? 1 : 0, imageRendering: pixelated ? "pixelated" : undefined }} />}
+    {under && <img className="sat-under" src={under} alt="" />}
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    {url && <img key={url} src={url} alt={alt} onLoad={() => setState({ url, ok: true })} onError={() => setState({ url, ok: false })} style={{ opacity: ok ? (under ? 0.55 : 1) : 0, imageRendering: pixelated ? "pixelated" : undefined }} />}
     {!ok && <div className="image-status">{failed ? <><Layers3 size={25} /><span>{t("No image available for this date.")}</span><small>{t("Try another year or month; satellite coverage varies.")}</small></> : <><LoaderCircle className="spin" size={22} /><span>{src ? t("Loading NASA imagery…") : waiting ?? t("Finding the clearest satellite pass…")}</span></>}</div>}
   </div>;
 }
@@ -199,6 +208,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   const [zoom, setZoom] = useState(0);
   const [month, setMonth] = useState(1);
   const [enhance, setEnhance] = useState(true);
+  const [photo, setPhoto] = useState(false);
   const [years, setYears] = useState<Record<Mode | "false721", [number, number]>>(() => ({
     landcover: [LANDCOVER_YEARS[0], LANDCOVER_YEARS[1]],
     vegetation: [2001, latestYearFor(3)],
@@ -305,32 +315,40 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   const effectiveView: View = view === "changes" && !canChanges ? "swipe" : view;
   const useEnhance = enhance && mode === "imagery";
   const short = (s: string) => (large ? s : s.slice(0, 4));
+  const canPhoto = mode === "landcover" || mode === "heat";
+  const under = photo && canPhoto ? photoUrl(place, span) : null;
+  const legend = mode === "landcover" && coverNow?.value ? coverNow.value.present.map(k => LANDCOVER_LEGEND.find(e => e.rgb === k)).filter(e => !!e).slice(0, 9) : [];
+  const bd = inBangladesh(place);
+  const legendLabel = (e: (typeof LANDCOVER_LEGEND)[number]) => (e.rgb === "255,213,0" && bd ? t("Savanna (mixed rural land)") : t(e.label));
 
   const viewer = (
     <>
       {effectiveView === "side" ? (
         <div className="sat-side">
           {[{ src: srcA, label: labelA }, { src: srcB, label: labelB }].map((x, i) => (
-            <div key={i} className="comparison-image"><Picture src={x.src} enhance={useEnhance} pixelated={pixelated} alt={`${place.name}, ${x.label}`} /><span className="image-date before-date">{x.label}</span></div>
+            <div key={i} className="comparison-image"><Picture src={x.src} enhance={useEnhance} pixelated={pixelated} under={under} alt={`${place.name}, ${x.label}`} /><span className="image-date before-date">{x.label}</span></div>
           ))}
         </div>
       ) : effectiveView === "changes" ? (
         <div className="comparison-image">
-          <Picture src={srcB} pixelated={pixelated} alt={`${place.name}, ${labelB}`} />
+          <Picture src={srcB} pixelated={pixelated} under={under} alt={`${place.name}, ${labelB}`} />
           <div className="change-dim" /><Overlay data={overlay} />
           <span className="image-date before-date">{t("Change {a} → {b}", { a: y(ya), b: y(yb) })}</span>
           {!overlay && <div className="image-status overlay-wait"><LoaderCircle className="spin" size={20} /><span>{t("Measuring change…")}</span></div>}
         </div>
       ) : (
         <div className="comparison-image">
-          <Picture src={srcB} enhance={useEnhance} pixelated={pixelated} alt={`${place.name}, ${labelB}`} />
-          <div className="before-image" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}><Picture src={srcA} enhance={useEnhance} pixelated={pixelated} alt={`${place.name}, ${labelA}`} /></div>
+          <Picture src={srcB} enhance={useEnhance} pixelated={pixelated} under={under} alt={`${place.name}, ${labelB}`} />
+          <div className="before-image" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}><Picture src={srcA} enhance={useEnhance} pixelated={pixelated} under={under} alt={`${place.name}, ${labelA}`} /></div>
           <span className="image-date before-date">{short(labelA)}</span><span className="image-date after-date">{short(labelB)}</span>
           <div className="comparison-line" style={{ left: `${split}%` }}><span>‹<i />›</span></div>
           <Slider aria-label={t("Before and after comparison")} className="comparison-slider" min={0} max={100} value={[split]} onValueChange={v => setSplit(v[0])} />
-          <div className="image-credit">{credit}{useEnhance ? ` · ${t("enhanced")}` : ""}</div>
+          <div className="image-credit">{credit}{useEnhance ? ` · ${t("enhanced")}` : ""}{under ? ` · ${t("photo © Esri, Maxar")}` : ""}</div>
         </div>
       )}
+      {!!legend.length && <div className="lc-legend" aria-label={t("Map key")}>
+        {legend.map(e => <span key={e.rgb} title={e.hint ? t(e.hint) : undefined}><i style={{ background: `rgb(${e.rgb})` }} />{legendLabel(e)}</span>)}
+      </div>}
     </>
   );
 
@@ -357,6 +375,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
             <button className={effectiveView === "side" ? "on" : ""} onClick={() => setView("side")}><Columns2 size={13} /> {t("Side by side")}</button>
             {canChanges && <button className={effectiveView === "changes" ? "on" : ""} onClick={() => setView("changes")}><Waypoints size={13} /> {t("Change map")}</button>}
           </div>
+          {canPhoto && <label className="hz-check" title={t("Lay the measured map over a present-day high-resolution photo")}><input type="checkbox" checked={photo} onChange={e => setPhoto(e.target.checked)} /> <ImageIcon size={13} /> {t("On satellite photo")}</label>}
           {mode === "imagery" && <label className="hz-check"><input type="checkbox" checked={enhance} onChange={e => setEnhance(e.target.checked)} /> <Sparkles size={13} /> {t("Remove haze")}</label>}
         </div>
       </div>
@@ -376,6 +395,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
                   return <tr key={g}><td><i style={{ background: COVER_META[g].color }} />{t(COVER_META[g].label)}</td><td>{n(c.a.share[g], 1)}%</td><td>{n(c.b.share[g], 1)}%</td><td className={Math.abs(d) < 1 ? "small" : d > 0 ? "up" : "down"}>{sp(d)}</td></tr>;
                 })}
               </tbody></table>
+              {bd && c.b.share.shrubGrass >= 5 && <p className="stat-note">{t("Golden yellow “savanna” here is mostly mixed rural land: in Bangladesh MODIS often gives this label to rice fields with homestead trees and seasonally flooded land.")}</p>}
               <p className="stat-note">{t("{a}% of the area changed class; {b}% became built-up.", { a: n(c.changedPct, 1), b: n(c.toBuiltPct, 1) })} {t("Open “Change map” to see where.")}</p>
               <div className="change-legend"><span><i style={{ background: "#ff3b30" }} />{t("Became built-up")}</span><span><i style={{ background: "#ff9500" }} />{t("Lost vegetation")}</span><span><i style={{ background: "#34c759" }} />{t("Gained vegetation")}</span><span><i style={{ background: "#409cff" }} />{t("Water change")}</span></div>
               <p className="stat-method">{t("NASA MODIS MCD12Q1 v6.1 (IGBP classes, 500 m, yearly). An official satellite classification with roughly 74% overall accuracy, so changes under 1–2 points may be classification noise. Each data cell is 500 m × 500 m (25 ha). Swaps between cropland and grass are the least reliable classes.")}</p>
