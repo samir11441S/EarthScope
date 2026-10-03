@@ -41,7 +41,8 @@ self.addEventListener("fetch", event => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // tiles and third-party APIs go straight to the network
-  if (request.mode === "navigate") { event.respondWith(networkFirst(request, "/")); return; }
+  // Pages: always revalidate with the server (never a stale HTTP-cached page that points at old assets).
+  if (request.mode === "navigate") { event.respondWith(networkFirst(new Request(request.url, { cache: "no-cache", credentials: "same-origin" }), "/")); return; }
   if (LIVE_API.some(p => url.pathname.startsWith(p))) { event.respondWith(networkFirst(request)); return; }
   if (url.pathname === "/api/clouds") { event.respondWith(cacheFirst(request)); return; } // one immutable map per date
   if (url.pathname.startsWith("/api/")) return; // AI and other dynamic routes: never cached
