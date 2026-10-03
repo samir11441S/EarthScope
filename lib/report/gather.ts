@@ -6,6 +6,7 @@ import type { ExtremeYear } from "../extremes";
 import { assessSafety, type HazardFeed, type SafePlace } from "../hazards";
 import { distanceKm } from "../geo";
 import type { HeatOutlook } from "../heat";
+import type { AirQuality } from "../air-quality";
 import { findClearestScene, pixels } from "@/components/satellite-compare";
 import type { ReportInputs } from "./model";
 
@@ -67,10 +68,11 @@ export async function gatherReport(
   const safeQuick = Promise.race([safeJob, new Promise<typeof PENDING>(r => setTimeout(() => r(PENDING), 8000))]);
 
   const liveJob = track("live", (async () => {
-    const [heat, feed, safe] = await Promise.all([
+    const [heat, feed, safe, air] = await Promise.all([
       settle(json<{ outlooks?: HeatOutlook[] }>(`/api/heat?points=${place.lat.toFixed(3)},${place.lon.toFixed(3)}`)),
       settle(json<HazardFeed>("/api/disasters")),
       safeQuick,
+      settle(json<AirQuality>(`/api/air?lat=${place.lat.toFixed(3)}&lon=${place.lon.toFixed(3)}`)),
     ]);
     const outlook = heat?.outlooks?.[0];
     const threats = feed ? assessSafety(place.lat, place.lon, feed.hazards).threats : null;
@@ -81,7 +83,7 @@ export async function gatherReport(
       ...extra.sort((a, b) => a.d - b.d).map(({ h, d }) => ({ title: h.title, type: h.type, severity: h.severity, distanceKm: d, inside: false, url: h.sources[0]?.url })),
     ].slice(0, 6) : null;
     const pending = safe === PENDING;
-    return { heat: outlook ? { days: outlook.days, source: outlook.source } : null, hazards, hazardsUpdated: feed?.updated ?? null, safePlaces: pending ? null : safe, pending };
+    return { heat: outlook ? { days: outlook.days, source: outlook.source } : null, air: air?.current ? { aqi: air.current.aqi, pm25: air.current.pm25, peakAqi: air.peakAqi, days: air.days.map(d => ({ date: d.date, maxAqi: d.maxAqi })) } : null, hazards, hazardsUpdated: feed?.updated ?? null, safePlaces: pending ? null : safe, pending };
   })());
 
   onStep?.("climate", true);
@@ -95,7 +97,7 @@ export async function gatherReport(
     land: land?.land ?? null, regionWaterPct: land?.regionWaterPct ?? null,
     ndvi,
     cover: cover ? { date: cover.date, sensor: cover.sensor } : null,
-    heat: live.heat, hazards: live.hazards, hazardsUpdated: live.hazardsUpdated, safePlaces: live.safePlaces,
+    heat: live.heat, air: live.air, hazards: live.hazards, hazardsUpdated: live.hazardsUpdated, safePlaces: live.safePlaces,
     liveFetched: new Date().toISOString(),
   };
   return { inputs, safeLater: live.pending ? safeJob : null };

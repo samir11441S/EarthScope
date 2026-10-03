@@ -160,6 +160,7 @@ const EN = {
     intro: (v: V) => `Snapshot at ${v.time}. Live conditions change quickly: always follow official warnings.`,
     hazards: "Hazards within 500 km", noHazards: "No active hazard reported within 500 km.", inside: "You are inside the impact zone", forecast: "In the forecast path",
     heat: "7-day heat outlook", heatIndex: "Heat index", noHeat: "Heat forecast unavailable.",
+    air: "Air quality (5-day forecast)", aqiNow: "US AQI now", who: (v: V) => `PM2.5 ${v.pm} µg/m³ · ${v.x}× the WHO daily guideline`, noAir: "Air-quality forecast unavailable.",
     safe: "Nearest emergency facilities", noSafe: "No mapped shelters or hospitals within 12 km in OpenStreetMap.", km: "km",
     official: "Official warnings", unavailable: "Live data could not be loaded when this report was made.", safeLoading: "Searching OpenStreetMap for shelters and hospitals… (this can take up to a minute)", safeFail: "The OpenStreetMap shelter search did not respond in time. Use Live disasters → “Am I safe?” in the app for shelters near you.",
   },
@@ -175,7 +176,7 @@ const EN = {
       ["NASA MODIS MOD13Q1", "16-day vegetation index (NDVI), 250 m, via NASA GIBS."],
       ["NASA HLS (Landsat 8/9 + Sentinel-2)", "30 m satellite imagery for the cover view, via NASA GIBS."],
       ["NASA GISTEMP v4", "Global and Arctic temperature anomalies for the comparison of warming rates."],
-      ["NASA EONET · GDACS · USGS", "Live natural hazards; Open-Meteo heat forecast; OpenStreetMap emergency facilities."],
+      ["NASA EONET · GDACS · USGS", "Live natural hazards; Open-Meteo heat forecast; Copernicus CAMS air-quality forecast (US EPA AQI, WHO 2021 PM2.5 guideline); OpenStreetMap emergency facilities."],
       ["IPCC AR6 WGI", "Calibrated likelihood language and global warming context."],
     ],
     methods: [
@@ -357,6 +358,7 @@ const BN: Dict = {
     intro: (v: V) => `${v.time}-এর তথ্য। পরিস্থিতি দ্রুত বদলায়: সবসময় সরকারি সতর্কবার্তা মেনে চলুন।`,
     hazards: "৫০০ কিমির মধ্যে দুর্যোগ", noHazards: "৫০০ কিমির মধ্যে কোনো সক্রিয় দুর্যোগের খবর নেই।", inside: "আপনি প্রভাব এলাকার ভেতরে", forecast: "পূর্বাভাসিত পথে",
     heat: "৭ দিনের তাপ পূর্বাভাস", heatIndex: "হিট ইনডেক্স", noHeat: "তাপের পূর্বাভাস পাওয়া যায়নি।",
+    air: "বায়ুর মান (৫ দিনের পূর্বাভাস)", aqiNow: "এখন US AQI", who: (v: V) => `PM2.5 ${v.pm} µg/m³ · WHO দৈনিক নির্দেশিকার ${v.x} গুণ`, noAir: "বায়ুর মানের পূর্বাভাস পাওয়া যায়নি।",
     safe: "নিকটতম জরুরি সেবাকেন্দ্র", noSafe: "OpenStreetMap-এ ১২ কিমির মধ্যে কোনো চিহ্নিত আশ্রয়কেন্দ্র বা হাসপাতাল নেই।", km: "কিমি",
     official: "সরকারি সতর্কবার্তা", unavailable: "প্রতিবেদন তৈরির সময় চলমান ডেটা লোড করা যায়নি।", safeLoading: "OpenStreetMap-এ আশ্রয়কেন্দ্র ও হাসপাতাল খোঁজা হচ্ছে… (এক মিনিট পর্যন্ত লাগতে পারে)", safeFail: "OpenStreetMap-এর আশ্রয়কেন্দ্র খোঁজার সেবা সময়মতো সাড়া দেয়নি। কাছের আশ্রয়কেন্দ্র দেখতে অ্যাপের “লাইভ দুর্যোগ → আমি কি নিরাপদ?” ব্যবহার করুন।",
   },
@@ -372,7 +374,7 @@ const BN: Dict = {
       ["NASA MODIS MOD13Q1", "১৬ দিনের উদ্ভিদ সূচক (NDVI), ২৫০ মি, NASA GIBS-এর মাধ্যমে।"],
       ["NASA HLS (Landsat 8/9 + Sentinel-2)", "প্রচ্ছদের ৩০ মিটার স্যাটেলাইট চিত্র, NASA GIBS-এর মাধ্যমে।"],
       ["NASA GISTEMP v4", "উষ্ণায়নের হার তুলনার জন্য বৈশ্বিক ও আর্কটিক তাপমাত্রার বিচ্যুতি।"],
-      ["NASA EONET · GDACS · USGS", "চলমান প্রাকৃতিক দুর্যোগ; Open-Meteo তাপ পূর্বাভাস; OpenStreetMap জরুরি সেবাকেন্দ্র।"],
+      ["NASA EONET · GDACS · USGS", "চলমান প্রাকৃতিক দুর্যোগ; Open-Meteo তাপ পূর্বাভাস; Copernicus CAMS বায়ুর মানের পূর্বাভাস (US EPA AQI, WHO ২০২১ PM2.5 নির্দেশিকা); OpenStreetMap জরুরি সেবাকেন্দ্র।"],
       ["IPCC AR6 WGI", "মানসম্মত সম্ভাবনা-ভাষা ও বৈশ্বিক উষ্ণায়নের প্রেক্ষাপট।"],
     ],
     methods: [

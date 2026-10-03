@@ -181,7 +181,7 @@
 
 /* ---------- Satellite comparison controls ---------- */
 .sat-toolbar{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
-.sat-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:#070c1a;border:1px solid #ffffff10;border-radius:10px;padding:5px}
+.sat-seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;background:#070c1a;border:1px solid #ffffff10;border-radius:10px;padding:5px}
 .sat-seg button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:none;border:0;border-radius:7px;padding:9px 12px;color:#92a6c1;text-align:left}
 .sat-seg button strong{font-size:12px;font-weight:600}
 .sat-seg button small{font-size:10px;opacity:.75}
@@ -195,6 +195,7 @@
 .sat-options{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:#768caa}
 .sat-options>span{margin-right:4px}
 .sat-options .hz-check{margin-left:auto}
+@media (max-width:1100px){.sat-seg{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:760px){.sat-seg{grid-template-columns:1fr}.sat-options .hz-check{margin-left:0;width:100%}}
 
 /* ---------- Time filter, phase badges, forecast ---------- */
@@ -384,3 +385,6 @@
 .aq-days span{flex:1;min-width:0;border-radius:6px;padding:4px 0;text-align:center;color:#0b1220;font-weight:700;font-size:11px;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;line-height:1.2}
 .aq-days em{font-style:normal;font-weight:500;font-size:9.5px;opacity:.8}
 .aq-advice{margin:0 0 6px;line-height:1.5;color:#c4d0e0}
+.heat-ramp{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;font-size:10.5px;color:#7d92ae;margin:-4px 0 12px}
+.heat-ramp i{grid-column:2;grid-row:1;height:8px;border-radius:4px}
+.heat-ramp span:first-of-type{grid-column:1;grid-row:1}.heat-ramp span:last-of-type{grid-column:3;grid-row:1}

@@ -29,7 +29,7 @@ export function AirQualityCard({ lat, lon, onData }: { lat: number; lon: number;
       <div><b>{n(a.current.pm25, 0)}</b><small>PM2.5 µg/m³</small></div>
       <div><b>{n(whoX, 1)}×</b><small>{t("WHO daily guideline")}</small></div>
     </div>
-    <div className="aq-days">{a.days.slice(0, 5).map(d => { const c = aqiCategory(d.maxAqi); return <span key={d.date} style={{ background: c.color }} title={`${t(c.label)} · ${n(d.maxAqi)}`}><em>{day(d.date)}</em>{n(d.maxAqi)}</span>; })}</div>
+    <div className="aq-days">{a.days.slice(0, 5).map(d => { const c = aqiCategory(d.maxAqi); return <span key={d.date} style={{ background: c.color, color: c.rank >= 3 ? "#fff" : undefined }} title={`${t(c.label)} · ${n(d.maxAqi)}`}><em>{day(d.date)}</em>{n(d.maxAqi)}</span>; })}</div>
     <p className="aq-advice">{t(peak.rank > cat.rank ? peak.advice : cat.advice)}{peak.rank > cat.rank ? ` ${t("(worse air forecast in the next 3 days)")}` : ""}</p>
     <small className="impact-source">{t("Copernicus CAMS forecast via Open-Meteo · US EPA AQI · WHO 2021 PM2.5 guideline")}</small>
   </div>;

@@ -6,6 +6,7 @@
 //   layer=landcover  MODIS MCD12Q1 IGBP land cover, 500 m, yearly 2001-2024 (date=YYYY-01-01)
 //   layer=ndvi16     MODIS MOD13Q1 NDVI, 250 m, 16-day composites
 //   layer=false721   MODIS Terra bands 7-2-1 false colour, 250 m, daily
+//   layer=lst8       MODIS MOD11A2 daytime land-surface temperature, 1 km, 8-day composites
 const LAYERS = {
   truecolor: { name: "MODIS_Terra_CorrectedReflectance_TrueColor", format: "image/jpeg", span: 2.2 },
   ndvi: { name: "MODIS_Terra_NDVI_8Day", format: "image/png", span: 2.2 },
@@ -16,6 +17,7 @@ const LAYERS = {
   landcover: { name: "MODIS_Combined_L3_IGBP_Land_Cover_Type_Annual", format: "image/png", span: 0.4 }, // MCD12Q1, yearly (TIME=YYYY-01-01)
   ndvi16: { name: "MODIS_Terra_L3_NDVI_16Day", format: "image/png", span: 0.4 }, // MOD13Q1, 16-day composites
   false721: { name: "MODIS_Terra_CorrectedReflectance_Bands721", format: "image/jpeg", span: 0.8 }, // water dark blue, cities magenta
+  lst8: { name: "MODIS_Terra_L3_Land_Surface_Temp_8Day_Day", format: "image/png", span: 0.4 }, // MOD11A2, colour map MODIS_Land_Surface_Temp (0.6 K steps)
 } as const;
 
 export async function GET(request: Request) {

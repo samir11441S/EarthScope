@@ -206,3 +206,13 @@
 .rp-bn .rp-kicker,.rp-bn .rp-riskcols h6,.rp-bn .rp-level,.rp-bn .rp-riskchip b{letter-spacing:0;text-transform:none}
 .rp-bn .rp-cover h1,.rp-bn .rp-sechead h2{letter-spacing:0}
 .rp-searching{display:flex;align-items:center;gap:6px}
+.rp-air{border:1px solid var(--line);border-left:4px solid;border-radius:7px;padding:7px 10px;font-size:8.5pt}
+.rp-air p{margin:4px 0}
+.rp-air-now{display:flex;align-items:baseline;gap:8px}
+.rp-air-now b{font-size:18pt;line-height:1}
+.rp-air-now span{display:flex;flex-direction:column;font-size:8pt}
+.rp-air-now em{font-style:normal;font-weight:700;font-size:9pt}
+.rp-air-days{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:6px 0}
+.rp-air-days span{border-radius:6px;padding:3px 0;text-align:center;font-weight:700;color:#0b1220;display:flex;flex-direction:column;font-size:9pt}
+.rp-air-days small{font-weight:500;font-size:7pt}
+.rp-air-advice{color:var(--muted,#555)}

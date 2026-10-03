@@ -4,7 +4,7 @@ import { CircleHelp, Columns2, Layers3, LoaderCircle, ScanSearch, Sparkles, Spli
 import { RangeControl as Slider } from "./range-control";
 import type { Place } from "@/lib/climate";
 import { useI18n } from "@/lib/i18n";
-import { compareLandCover, compareNdvi, COVER_META, LANDCOVER_YEARS, ndviComposites, type CoverChange, type CoverGroup, type NdviChange } from "@/lib/earth-change";
+import { compareLandCover, compareLst, compareNdvi, COVER_META, HEAT_RAMP, LANDCOVER_YEARS, LST_REL_THRESHOLD, lstComposites, ndviComposites, renderLst, type CoverChange, type CoverGroup, type LstChange, type NdviChange } from "@/lib/earth-change";
 
 // Satellite comparison, rebuilt for like-for-like accuracy:
 //   • Land cover — NASA MODIS MCD12Q1 (official yearly classification), measured shares + change map.
@@ -12,7 +12,7 @@ import { compareLandCover, compareNdvi, COVER_META, LANDCOVER_YEARS, ndviComposi
 //   • Satellite view — 30 m Landsat/Sentinel-2 (HLS) or MODIS false colour, the same month in both years,
 //     the clearest pass in each, preferring the same sensor. Visual context only.
 
-type Mode = "landcover" | "vegetation" | "imagery";
+type Mode = "landcover" | "vegetation" | "heat" | "imagery";
 export type ImageryKind = "hls" | "false721";
 type View = "swipe" | "side" | "changes";
 export type Scene = { date: string; sensor: "S30" | "L30" | "MODIS"; score: number };
@@ -185,10 +185,13 @@ function Overlay({ data }: { data: ImageData | null }) {
   return <canvas ref={ref} className="change-overlay" aria-hidden="true" />;
 }
 
-const signedPts = (v: number, d = 1) => `${v > 0 ? "+" : ""}${v.toFixed(d)}`;
+// Error messages set in effects and translated at render time.
+/* i18n */// "NASA land-cover tiles could not be loaded." "NASA NDVI tiles could not be loaded." "No NDVI composites for that month yet — pick an earlier month or year." "No surface-temperature composites for that month yet — pick an earlier month or year." "Clouds hid this area in that month — try a drier month such as January–April." "NASA surface-temperature tiles could not be loaded."
+/* /i18n */
 
 export default function SatelliteComparison({ place, large = false }: { place: Place; large?: boolean }) {
   const { t, n, y, lang } = useI18n();
+  const sp = (v: number, d = 1) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${n(Math.abs(v), d)}`; // signed, in the interface language
   const [mode, setMode] = useState<Mode>(large ? "landcover" : "imagery");
   const [kind, setKind] = useState<ImageryKind>("hls");
   const [view, setView] = useState<View>("swipe");
@@ -199,6 +202,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   const [years, setYears] = useState<Record<Mode | "false721", [number, number]>>(() => ({
     landcover: [LANDCOVER_YEARS[0], LANDCOVER_YEARS[1]],
     vegetation: [2001, latestYearFor(3)],
+    heat: [2003, latestYearFor(4)], // April: pre-monsoon peak heat with mostly clear skies over South Asia
     imagery: [2014, nowYear() - 1], // Landsat in both years; current-year L30 often lags in GIBS
     false721: [2001, latestYearFor(1)],
   }));
@@ -207,7 +211,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   const setYear = (i: 0 | 1, v: number) => setYears(y => ({ ...y, [yearKey]: (i === 0 ? [v, y[yearKey][1]] : [y[yearKey][0], v]) as [number, number] }));
   const span = ZOOMS[zoom].span, areaKm2 = (span * 110.57) ** 2;
   const yearOptions = mode === "landcover" ? range(LANDCOVER_YEARS[0], LANDCOVER_YEARS[1])
-    : mode === "vegetation" ? range(2001, latestYearFor(month))
+    : mode === "vegetation" || mode === "heat" ? range(2001, latestYearFor(month))
     : kind === "hls" ? range(2013, latestYearFor(month)) : range(2000, latestYearFor(month));
 
   // ---- Land cover -------------------------------------------------------------
@@ -232,7 +236,7 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   useEffect(() => {
     if (mode !== "vegetation") return;
     let active = true;
-    if (!compA.length || !compB.length) { queueMicrotask(() => active && setNdvi({ key: nKey, value: null, error: t("No NDVI composites for that month yet — pick an earlier month or year.") })); return () => { active = false; }; }
+    if (!compA.length || !compB.length) { queueMicrotask(() => active && setNdvi({ key: nKey, value: null, error: "No NDVI composites for that month yet — pick an earlier month or year." })); return () => { active = false; }; }
     Promise.all([Promise.all(ndviUrls(compA).map(u => pixels(u, SIZE_ANALYSIS))), Promise.all(ndviUrls(compB).map(u => pixels(u, SIZE_ANALYSIS)))])
       .then(([a, b]) => active && setNdvi({ key: nKey, value: compareNdvi(a, b) }))
       .catch(() => active && setNdvi({ key: nKey, value: null, error: "NASA NDVI tiles could not be loaded." }));
@@ -241,6 +245,30 @@ export default function SatelliteComparison({ place, large = false }: { place: P
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, nKey]);
   const ndviNow = ndvi && ndvi.key === nKey ? ndvi : null;
+
+  // ---- Surface heat (land-surface temperature) -------------------------------
+  const lstA = useMemo(() => lstComposites(ya, month), [ya, month]), lstB = useMemo(() => lstComposites(yb, month), [yb, month]);
+  const hKey = `${place.lat},${place.lon},${span},${lstA.join()},${lstB.join()}`;
+  const [heat, setHeat] = useState<{ key: string; value: (LstChange & { urlA: string; urlB: string }) | null; error?: string } | null>(null);
+  useEffect(() => {
+    if (mode !== "heat") return;
+    let active = true;
+    if (!lstA.length || !lstB.length) { queueMicrotask(() => active && setHeat({ key: hKey, value: null, error: "No surface-temperature composites for that month yet — pick an earlier month or year." })); return () => { active = false; }; }
+    const urls = (dates: string[]) => dates.map(d => pixels(img(place, "lst8", d, span, SIZE_ANALYSIS), SIZE_ANALYSIS));
+    Promise.all([Promise.all(urls(lstA)), Promise.all(urls(lstB))])
+      .then(([a, b]) => {
+        if (!active) return;
+        const c = compareLst(a, b);
+        if (c.coverage < 0.05) { setHeat({ key: hKey, value: null, error: "Clouds hid this area in that month — try a drier month such as January–April." }); return; }
+        const toUrl = (f: Float32Array) => { const cv = document.createElement("canvas"); cv.width = c.width; cv.height = c.height; cv.getContext("2d")!.putImageData(renderLst(f, c.width, c.height, c.lo, c.hi), 0, 0); return cv.toDataURL(); };
+        setHeat({ key: hKey, value: { ...c, urlA: toUrl(c.fieldA), urlB: toUrl(c.fieldB) } });
+      })
+      .catch(() => active && setHeat({ key: hKey, value: null, error: "NASA surface-temperature tiles could not be loaded." }));
+    return () => { active = false; };
+    // the key captures every input
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, hKey]);
+  const heatNow = heat && heat.key === hKey ? heat : null;
 
   // ---- Satellite view ---------------------------------------------------------
   const targetA = `${ya}-${String(month).padStart(2, "0")}-15`, targetB = `${yb}-${String(month).padStart(2, "0")}-15`;
@@ -264,14 +292,15 @@ export default function SatelliteComparison({ place, large = false }: { place: P
   let srcA: string | null, srcB: string | null, labelA: string, labelB: string, credit: string;
   if (mode === "landcover") { srcA = lcA; srcB = lcB; labelA = t("{year} land cover", { year: y(ya) }); labelB = t("{year} land cover", { year: y(yb) }); credit = t("NASA MODIS MCD12Q1 land cover (IGBP), 500 m"); }
   else if (mode === "vegetation") { srcA = compA[0] ? ndviUrls([compA[0]])[0] : null; srcB = compB[0] ? ndviUrls([compB[0]])[0] : null; labelA = `${y(ya)} ${t(MONTHS[month - 1])} NDVI`; labelB = `${y(yb)} ${t(MONTHS[month - 1])} NDVI`; credit = t("NASA MODIS MOD13Q1 NDVI, 250 m, 16-day"); }
+  else if (mode === "heat") { srcA = heatNow?.value?.urlA ?? null; srcB = heatNow?.value?.urlB ?? null; labelA = `${y(ya)} ${t(MONTHS[month - 1])} · ${t("surface °C")}`; labelB = `${y(yb)} ${t(MONTHS[month - 1])} · ${t("surface °C")}`; credit = t("NASA MODIS MOD11A2 land-surface temperature (day), 1 km"); }
   else {
     srcA = sceneUrl(sc?.a); srcB = sceneUrl(sc?.b);
     labelA = sc?.a ? `${sc.a.date} · ${SENSOR_NAME[sc.a.sensor]}` : `${y(ya)} ${t(MONTHS[month - 1])}`;
     labelB = sc?.b ? `${sc.b.date} · ${SENSOR_NAME[sc.b.sensor]}` : `${y(yb)} ${t(MONTHS[month - 1])}`;
     credit = kind === "hls" ? t("NASA HLS (Landsat + Sentinel-2), 30 m") : t("NASA Terra MODIS bands 7-2-1, 250 m");
   }
-  const pixelated = mode === "landcover";
-  const overlay = mode === "landcover" ? coverNow?.value?.overlay ?? null : mode === "vegetation" ? ndviNow?.value?.overlay ?? null : null;
+  const pixelated = mode === "landcover" || mode === "heat";
+  const overlay = mode === "landcover" ? coverNow?.value?.overlay ?? null : mode === "vegetation" ? ndviNow?.value?.overlay ?? null : mode === "heat" ? heatNow?.value?.overlay ?? null : null;
   const canChanges = mode !== "imagery";
   const effectiveView: View = view === "changes" && !canChanges ? "swipe" : view;
   const useEnhance = enhance && mode === "imagery";
@@ -312,8 +341,8 @@ export default function SatelliteComparison({ place, large = false }: { place: P
     <div className="satellite-comparison large">
       <div className="sat-toolbar">
         <div className="sat-seg" role="tablist" aria-label={t("What to compare")}>
-          {(/* i18n */[["landcover", "Land cover change", "Measured · NASA MODIS 2001–2024"], ["vegetation", "Vegetation (NDVI)", "Measured · same season · 2001–now"], ["imagery", "Satellite view", "Visual · 30 m Landsat/Sentinel-2"]]/* /i18n */ as const).map(([id, l, s]) => (
-            <button key={id} role="tab" aria-selected={mode === id} className={mode === id ? "on" : ""} onClick={() => setMode(id)}><strong>{t(l)}</strong><small>{t(s)}</small></button>
+          {(/* i18n */[["landcover", "Land cover change", "Measured · NASA MODIS 2001–2024"], ["vegetation", "Vegetation (NDVI)", "Measured · same season · 2001–now"], ["heat", "Surface heat", "Measured · NASA MODIS 1 km · 2001–now"], ["imagery", "Satellite view", "Visual · 30 m Landsat/Sentinel-2"]]/* /i18n */ as const).map(([id, l, s]) => (
+            <button key={id} role="tab" aria-selected={mode === id} className={mode === id ? "on" : ""} onClick={() => { setMode(id); if (id === "heat" && month < 2) setMonth(4); }}><strong>{t(l)}</strong><small>{t(s)}</small></button>
           ))}
         </div>
 
@@ -340,32 +369,49 @@ export default function SatelliteComparison({ place, large = false }: { place: P
             const c = coverNow.value, builtKm2 = ((c.b.share.built - c.a.share.built) / 100) * areaKm2;
             return <>
               <h4>{t("What changed, {a} → {b}", { a: y(ya), b: y(yb) })}</h4>
-              <p className="stat-lead"><strong>{signedPts(c.b.share.built - c.a.share.built)} {t("pts")}</strong> {t("built-up land")} ({n(c.a.share.built, 1)}% → {n(c.b.share.built, 1)}%), {t("about")} <strong>{Math.abs(builtKm2) < 1 ? n(Math.abs(builtKm2), 1) : n(Math.round(Math.abs(builtKm2)))} km²</strong> {builtKm2 >= 0 ? t("more") : t("less")} {t("within this {km} km square.", { km: n(ZOOMS[zoom].km) })}</p>
+              <p className="stat-lead"><strong>{sp(c.b.share.built - c.a.share.built)} {t("pts")}</strong> {t("built-up land")} ({n(c.a.share.built, 1)}% → {n(c.b.share.built, 1)}%), {t("about")} <strong>{Math.abs(builtKm2) < 1 ? n(Math.abs(builtKm2), 1) : n(Math.round(Math.abs(builtKm2)))} km²</strong> {builtKm2 >= 0 ? t("more") : t("less")} {t("within this {km} km square.", { km: n(ZOOMS[zoom].km) })}</p>
               <table className="stat-table"><thead><tr><th>{t("Cover")}</th><th>{y(ya)}</th><th>{y(yb)}</th><th>{t("Change")}</th></tr></thead><tbody>
                 {order.filter(g => c.a.share[g] >= 0.05 || c.b.share[g] >= 0.05).map(g => {
                   const d = c.b.share[g] - c.a.share[g];
-                  return <tr key={g}><td><i style={{ background: COVER_META[g].color }} />{t(COVER_META[g].label)}</td><td>{n(c.a.share[g], 1)}%</td><td>{n(c.b.share[g], 1)}%</td><td className={Math.abs(d) < 1 ? "small" : d > 0 ? "up" : "down"}>{signedPts(d)}</td></tr>;
+                  return <tr key={g}><td><i style={{ background: COVER_META[g].color }} />{t(COVER_META[g].label)}</td><td>{n(c.a.share[g], 1)}%</td><td>{n(c.b.share[g], 1)}%</td><td className={Math.abs(d) < 1 ? "small" : d > 0 ? "up" : "down"}>{sp(d)}</td></tr>;
                 })}
               </tbody></table>
               <p className="stat-note">{t("{a}% of the area changed class; {b}% became built-up.", { a: n(c.changedPct, 1), b: n(c.toBuiltPct, 1) })} {t("Open “Change map” to see where.")}</p>
               <div className="change-legend"><span><i style={{ background: "#ff3b30" }} />{t("Became built-up")}</span><span><i style={{ background: "#ff9500" }} />{t("Lost vegetation")}</span><span><i style={{ background: "#34c759" }} />{t("Gained vegetation")}</span><span><i style={{ background: "#409cff" }} />{t("Water change")}</span></div>
               <p className="stat-method">{t("NASA MODIS MCD12Q1 v6.1 (IGBP classes, 500 m, yearly). An official satellite classification with roughly 74% overall accuracy, so changes under 1–2 points may be classification noise. Each data cell is 500 m × 500 m (25 ha). Swaps between cropland and grass are the least reliable classes.")}</p>
             </>;
-          })() : <p className="stat-wait">{coverNow?.error ?? <><LoaderCircle className="spin" size={14} /> {t("Measuring land cover…")}</>}</p>)}
+          })() : <p className="stat-wait">{coverNow?.error ? t(coverNow.error) : <><LoaderCircle className="spin" size={14} /> {t("Measuring land cover…")}</>}</p>)}
 
           {mode === "vegetation" && (ndviNow?.value ? (() => {
             const v = ndviNow.value;
             return <>
               <h4>{t("Vegetation, {month} {a} vs {b}", { month: t(MONTHS[month - 1]), a: y(ya), b: y(yb) })}</h4>
-              <p className="stat-lead">{t("Mean NDVI")} <strong>{n(v.meanA, 2)} → {n(v.meanB, 2)}</strong> ({signedPts(((v.meanB - v.meanA) / Math.max(0.01, v.meanA)) * 100, 0)}%).</p>
+              <p className="stat-lead">{t("Mean NDVI")} <strong>{n(v.meanA, 2)} → {n(v.meanB, 2)}</strong> ({sp(((v.meanB - v.meanA) / Math.max(0.01, v.meanA)) * 100, 0)}%).</p>
               <table className="stat-table"><tbody>
-                <tr><td>{t("Dense vegetation (NDVI ≥ 0.5)")}</td><td>{n(v.denseA)}%</td><td>{n(v.denseB)}%</td><td className={v.denseB - v.denseA > 0 ? "up" : "down"}>{signedPts(v.denseB - v.denseA, 0)}</td></tr>
+                <tr><td>{t("Dense vegetation (NDVI ≥ 0.5)")}</td><td>{n(v.denseA)}%</td><td>{n(v.denseB)}%</td><td className={v.denseB - v.denseA > 0 ? "up" : "down"}>{sp(v.denseB - v.denseA, 0)}</td></tr>
                 <tr><td><i style={{ background: "#34c759" }} />{t("Clearly greener (ΔNDVI ≥ +0.1)")}</td><td colSpan={3}>{t("{p}% of area", { p: n(v.greenerPct) })}</td></tr>
                 <tr><td><i style={{ background: "#d66020" }} />{t("Clearly browner (ΔNDVI ≤ −0.1)")}</td><td colSpan={3}>{t("{p}% of area", { p: n(v.brownerPct) })}</td></tr>
               </tbody></table>
               <p className="stat-method">{t("NASA MODIS MOD13Q1 NDVI (250 m). Each year averages three 16-day composites from the same season (from {start}), so crop calendars and monsoon timing match. Browning can mean new buildings, bare fields or drought; greening can mean irrigation or extra crop cycles.", { start: compA[0] ? fmtDate(compA[0], lang).replace(/ [\d০-৯]{4}$/, "") : t(MONTHS[month - 1]) })}</p>
             </>;
-          })() : <p className="stat-wait">{ndviNow?.error ?? <><LoaderCircle className="spin" size={14} /> {t("Measuring vegetation…")}</>}</p>)}
+          })() : <p className="stat-wait">{ndviNow?.error ? t(ndviNow.error) : <><LoaderCircle className="spin" size={14} /> {t("Measuring vegetation…")}</>}</p>)}
+
+          {mode === "heat" && (heatNow?.value ? (() => {
+            const v = heatNow.value, shift = v.meanB - v.meanA;
+            return <>
+              <h4>{t("Surface heat, {month} {a} vs {b}", { month: t(MONTHS[month - 1]), a: y(ya), b: y(yb) })}</h4>
+              <p className="stat-lead">{t("Area-mean daytime surface")} <strong>{n(v.meanA, 1)} → {n(v.meanB, 1)} °C</strong> ({sp(shift)} °C).</p>
+              <div className="heat-ramp"><i style={{ background: `linear-gradient(90deg, ${HEAT_RAMP.join(",")})` }} /><span>{n(v.lo)} °C</span><span>{n(v.hi)} °C</span></div>
+              <table className="stat-table"><thead><tr><th></th><th>{y(ya)}</th><th>{y(yb)}</th><th>{t("Change")}</th></tr></thead><tbody>
+                <tr><td title={t("Mean of the hottest 10% of the area minus the area median — a surface urban-heat-island measure.")}>{t("Hot-spot intensity")}</td><td>+{n(v.hotA, 1)}°</td><td>+{n(v.hotB, 1)}°</td><td className={v.hotB - v.hotA >= 0.3 ? "up" : v.hotB - v.hotA <= -0.3 ? "down" : "small"}>{sp(v.hotB - v.hotA)}</td></tr>
+                <tr><td>{t("Hottest 1% of the area")}</td><td>{n(v.maxA, 1)}°</td><td>{n(v.maxB, 1)}°</td><td className="small">{sp(v.maxB - v.maxA)}</td></tr>
+                <tr><td><i style={{ background: "#ff3b30" }} />{t("Warmed more than surroundings (≥ {d} °C)", { d: n(LST_REL_THRESHOLD, 1) })}</td><td colSpan={3}>{t("{p}% of area", { p: n(v.warmerPct) })}</td></tr>
+                <tr><td><i style={{ background: "#409cff" }} />{t("Cooled more than surroundings (≥ {d} °C)", { d: n(LST_REL_THRESHOLD, 1) })}</td><td colSpan={3}>{t("{p}% of area", { p: n(v.coolerPct) })}</td></tr>
+              </tbody></table>
+              {v.coverage < 0.6 && <p className="stat-note">{t("Clouds hid {p}% of the area in at least one of the years, so these numbers cover only the clear part.", { p: n(Math.round((1 - v.coverage) * 100)) })}</p>}
+              <p className="stat-method">{t("NASA MODIS MOD11A2 daytime land-surface temperature (1 km; the 8-day composites of the month are averaged; Terra overpass ≈ 10:30). This is the temperature of roofs, roads and ground, which runs hotter than the air. Whole seasons differ from year to year, so the change map shows places that warmed or cooled more than the area as a whole — usually new buildings, lost trees or new water.")}</p>
+            </>;
+          })() : <p className="stat-wait">{heatNow?.error ? t(heatNow.error) : <><LoaderCircle className="spin" size={14} /> {t("Measuring surface heat…")}</>}</p>)}
 
           {mode === "imagery" && <>
             <h4>{t("Like-for-like scenes")}</h4>

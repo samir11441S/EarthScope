@@ -7,6 +7,8 @@ import type { ClimateData, Place } from "@/lib/climate";
 import { compareLandCover, COVER_META, type CoverGroup } from "@/lib/earth-change";
 import { INDEX_META, type IndexKey, type IndexStat } from "@/lib/extremes";
 import { HEAT_META } from "@/lib/heat";
+import { aqiCategory, WHO_PM25_24H } from "@/lib/air-quality";
+import { makeI18n } from "@/lib/i18n";
 import { linearTrend } from "@/lib/stats";
 import { buildModel, reportCsv, type Audience, type Lang, type ReportInputs, type ReportModel, type Risk } from "@/lib/report/model";
 import { gatherReport, landcoverUrl, REPORT_SPAN, type Step } from "@/lib/report/gather";
@@ -540,10 +542,27 @@ function NowSection({ m, t, lang, safeLoading }: { m: ReportModel; t: Dict; lang
       <em style={{ color: HEAT_META[d.level].color }}>{t.heatLevel[d.level]}</em>
       {d.bmd !== "none" && bd && <em>{t.bmd[d.bmd]}</em>}
     </div>)}</div> : <p className="rp-muted">{t.now.noHeat}</p>}
+    <AirBlock air={I.air} t={t} lang={lang} />
     <h4 className="rp-h4">{t.now.safe}</h4>
     {safeLoading ? <p className="rp-muted rp-searching"><LoaderCircle className="spin" size={13} /> {t.now.safeLoading}</p> : I.safePlaces === null ? <p className="rp-muted">{t.now.safeFail}</p> : I.safePlaces.length ? <ul className="rp-safe">{I.safePlaces.map((s, i) => <li key={i}><b>{t.safe[s.kind]}</b> {s.name} <span>{num(lang, s.distanceKm, 1)} {t.now.km}</span></li>)}</ul> : <p className="rp-muted">{t.now.noSafe}</p>}
     <h4 className="rp-h4">{t.now.official}</h4>
     <ul className="rp-official">{t.official[bd ? "bd" : "world"].map(([n, u]) => <li key={u}><b>{n}</b> {u}</li>)}</ul>
+  </>;
+}
+
+function AirBlock({ air, t, lang }: { air: ReportInputs["air"]; t: Dict; lang: Lang }) {
+  if (air === undefined) return null; // report saved before air quality was added
+  const tr = makeI18n(lang).t;
+  if (!air) return <><h4 className="rp-h4">{t.now.air}</h4><p className="rp-muted">{t.now.noAir}</p></>;
+  const cat = aqiCategory(air.aqi), peak = aqiCategory(air.peakAqi), worse = peak.rank > cat.rank;
+  return <>
+    <h4 className="rp-h4">{t.now.air}</h4>
+    <div className="rp-air" style={{ borderLeftColor: cat.color }}>
+      <div className="rp-air-now"><b>{num(lang, air.aqi, 0)}</b><span>{t.now.aqiNow}<em style={{ color: cat.color }}>{tr(cat.label)}</em></span></div>
+      <p>{t.now.who({ pm: num(lang, air.pm25, 0), x: num(lang, air.pm25 / WHO_PM25_24H, 1) })}</p>
+      <div className="rp-air-days">{air.days.slice(0, 5).map(d => <span key={d.date} style={{ background: aqiCategory(d.maxAqi).color, color: aqiCategory(d.maxAqi).rank >= 3 ? "#fff" : undefined }}><small>{new Date(d.date + "T00:00:00Z").toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { weekday: "short", timeZone: "UTC" })}</small>{num(lang, d.maxAqi, 0)}</span>)}</div>
+      <p className="rp-air-advice">{tr(worse ? peak.advice : cat.advice)}</p>
+    </div>
   </>;
 }
 
