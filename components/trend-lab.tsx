@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type * as Leaflet from "leaflet";
-import { Activity, CircleHelp, FlaskConical, LoaderCircle, Microscope, Play, ShieldCheck, Sigma, Split, TriangleAlert } from "lucide-react";
+import { Activity, CircleHelp, FlaskConical, Focus, LoaderCircle, Microscope, Play, ShieldCheck, Sigma, Split, TriangleAlert } from "lucide-react";
 import { basemapLayer, createMap, labelsLayer, loadLeaflet, type L } from "./map-kit";
 import type { Place } from "@/lib/climate";
 import { lstAt, ndviAt } from "@/lib/earth-change";
@@ -139,14 +139,25 @@ export default function TrendLab({ place }: { place: Place }) {
   const el = useRef<HTMLDivElement>(null), mapRef = useRef<Leaflet.Map | null>(null), lRef = useRef<L | null>(null), layerRef = useRef<Leaflet.LayerGroup | null>(null);
   const [ready, setReady] = useState(false);
   const fitted = useRef<string>("");
+  const areaRef = useRef<Leaflet.LatLngBounds | null>(null);
+  const [offView, setOffView] = useState(false);
+  const zoomToArea = () => { const map = mapRef.current, a = areaRef.current; if (map && a) { map.invalidateSize(); map.fitBounds(a, { padding: [16, 16], animate: false }); setOffView(false); } };
   useEffect(() => {
     let cancelled = false;
     loadLeaflet().then(Lf => {
       if (cancelled || !el.current) return;
       const map = createMap(Lf, el.current, { center: [24, 90], zoom: 5, preferCanvas: true });
-      basemapLayer(Lf, "satellite").addTo(map);
+      // Cloud-free NASA Blue Marble (sharp photo imagery when zoomed in), so nothing hides the data squares.
+      basemapLayer(Lf, "relief").addTo(map);
       labelsLayer(Lf).addTo(map);
       mapRef.current = map; lRef.current = Lf; layerRef.current = Lf.layerGroup().addTo(map);
+      // Is the analysed area still comfortably in view? If not, the "Zoom to analysed area" button stands out.
+      map.on("moveend zoomend", () => {
+        const a = areaRef.current;
+        if (!a) return;
+        const sz = map.getSize(), nw = map.latLngToContainerPoint(a.getNorthWest()), se = map.latLngToContainerPoint(a.getSouthEast());
+        setOffView(!map.getBounds().contains(a.getCenter()) || (se.x - nw.x) < sz.x * 0.25);
+      });
       setReady(true);
     });
     return () => { cancelled = true; mapRef.current?.remove(); mapRef.current = null; };
@@ -171,8 +182,12 @@ export default function TrendLab({ place }: { place: Place }) {
         if (c.significant) Lf.circleMarker([c.lat, c.lon], { renderer, radius: 2.2, stroke: false, fillColor: "#0b1220", fillOpacity: 0.9, interactive: false }).addTo(group);
         else if (c.breakYear && !c.excluded) Lf.circleMarker([c.lat, c.lon], { renderer, radius: 2, color: "#fff", weight: 1, fill: false, interactive: false }).addTo(group);
       });
-      const all = grid.cells.map(c => [c.lat, c.lon] as [number, number]);
-      if (all.length && fitted.current !== `g|${gridKey}`) { fitted.current = `g|${gridKey}`; setTimeout(() => { map.invalidateSize(); map.fitBounds(Lf.latLngBounds(all), { padding: [10, 10], animate: false }); }, 60); }
+      // Outline and label the analysed region: everything outside it is just the background picture.
+      const area = Lf.latLngBounds([[Math.min(...lats) - dLat / 2, Math.min(...lons) - dLon / 2], [Math.max(...lats) + dLat / 2, Math.max(...lons) + dLon / 2]]);
+      areaRef.current = area;
+      Lf.rectangle(area, { color: "#5cc2ff", weight: 2, dashArray: "7 5", fill: false, interactive: false }).addTo(group);
+      Lf.marker(area.getNorthWest(), { interactive: false, keyboard: false, icon: Lf.divIcon({ className: "tl-area-label", html: `<span>${t("Analysed region")} · ${t(REGIONS[region].label)}</span>`, iconSize: [0, 0] }) }).addTo(group);
+      if (fitted.current !== `g|${gridKey}`) { fitted.current = `g|${gridKey}`; setTimeout(() => { map.invalidateSize(); map.fitBounds(area, { padding: [16, 16], animate: false }); setOffView(false); }, 60); }
     }
     if (engine === "pixel" && pixelNow?.run) {
       const { result, bounds } = pixelNow.run, cv = document.createElement("canvas");
@@ -190,11 +205,13 @@ export default function TrendLab({ place }: { place: Place }) {
         const x = Math.floor(((ll.lng - w) / (ee - w)) * result.width), yy = Math.floor(((nn - ll.lat) / (nn - s)) * result.height);
         if (x >= 0 && yy >= 0 && x < result.width && yy < result.height) setSel(yy * result.width + x);
       });
-      Lf.rectangle(bounds, { color: "#5cc2ff", weight: 1.5, fill: false, interactive: false }).addTo(group);
+      areaRef.current = Lf.latLngBounds(bounds);
+      Lf.rectangle(bounds, { color: "#5cc2ff", weight: 2, dashArray: "7 5", fill: false, interactive: false }).addTo(group);
+      Lf.marker(Lf.latLngBounds(bounds).getNorthWest(), { interactive: false, keyboard: false, icon: Lf.divIcon({ className: "tl-area-label", html: `<span>${t("Analysed square")} · ${n(SPANS[spanIdx].km)} km · ${place.name.replace(/[<>&]/g, "")}</span>`, iconSize: [0, 0] }) }).addTo(group);
       // Zoom to the square once the map has its final size (it may still be laying out).
       if (fitted.current !== `p|${pixelKey}`) { fitted.current = `p|${pixelKey}`; setTimeout(() => { map.invalidateSize(); map.setView(Lf.latLngBounds(bounds).getCenter(), Math.max(6, map.getBoundsZoom(bounds, false, Lf.point(16, 16))), { animate: false }); }, 60); }
     }
-  }, [ready, engine, grid, gridScale, pkind, sel, pixelNow, pixScale, pvar, gridKey, pixelKey]);
+  }, [ready, engine, grid, gridScale, pkind, sel, pixelNow, pixScale, pvar, gridKey, pixelKey, region, spanIdx, place.name, t, n]);
 
   // ---- Case study: one driver, opposite trends -----------------------------------------------------
   const runCase = async () => {
@@ -248,6 +265,7 @@ export default function TrendLab({ place }: { place: Place }) {
       <div className="tlab-grid">
         <div className="tl-map-card">
           <div ref={el} className="tl-map" role="application" aria-label={t("Trend map")} />
+          <button className={`tl-zoom-area${offView ? " attention" : ""}`} onClick={zoomToArea} title={t("Only the outlined area is analysed; the rest of the map is a background picture.")}><Focus size={14} /> {t("Zoom to analysed area")}</button>
           <div className="map-legend tl-legend">
             <div className="legend-bar" style={{ background: `linear-gradient(90deg, ${ramp})` }} />
             <div className="legend-labels"><span>{sn(-scale, 2)}</span><span>{unitPer}</span><span>{sn(scale, 2)}</span></div>

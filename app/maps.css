@@ -488,3 +488,14 @@
 @media (max-width:1100px){.tlab-grid{grid-template-columns:1fr}.tl-panel{max-height:none}.tl-map{height:480px}}
 @media (max-width:640px){.tl-engine{grid-template-columns:1fr}.tl-map{height:380px}.tl-verdict b{font-size:16px}}
 .tl-link{width:100%;justify-content:center;margin:0 0 10px}
+/* Map overlays: no backdrop blur over Leaflet — some browsers paint the blurred box solid black. */
+.map-legend,.map-toolbar button,.atlas-year-badge,.lc-legend,.tl-controls,.flood-panel{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.map-legend,.lc-legend{background:#060d1bf2}
+/* Trend Lab: analysed-area label and zoom button */
+.tl-area-label{overflow:visible}
+.tl-area-label span{position:absolute;left:0;bottom:4px;white-space:nowrap;background:#0a1a3af2;color:#cfe6ff;border:1px solid #5cc2ff88;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;box-shadow:0 2px 10px #0006}
+.tl-zoom-area{position:absolute;top:12px;right:12px;z-index:500;display:inline-flex;align-items:center;gap:6px;background:#060d1bf2;border:1px solid #5cc2ff66;color:#cfe6ff;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer}
+.tl-zoom-area:hover{background:#0f2350}
+.tl-zoom-area.attention{background:linear-gradient(90deg,#2f8cff,#38b6ff);color:#fff;border-color:transparent;box-shadow:0 0 0 0 #38b6ff88;animation:tl-pulse 1.6s ease-out infinite}
+@keyframes tl-pulse{0%{box-shadow:0 0 0 0 #38b6ff88}100%{box-shadow:0 0 0 12px #38b6ff00}}
+@media (prefers-reduced-motion:reduce){.tl-zoom-area.attention{animation:none}}
