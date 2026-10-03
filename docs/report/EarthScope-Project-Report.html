@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EarthScope — Project Report (A to Z)</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm;
+    @bottom-left { content: "EarthScope — Project Report"; font-family: "Segoe UI", sans-serif; font-size: 8pt; color: #8a99b1; }
+    @bottom-right { content: counter(page) " / " counter(pages); font-family: "Segoe UI", sans-serif; font-size: 8pt; color: #8a99b1; } }
+  @page :first { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }
+  :root { --ink:#0b1a33; --muted:#5b6b85; --line:#dbe4f0; --blue:#1d6fe0; --cyan:#0aa5d8; --navy:#071433; --soft:#f3f7fd; --red:#d6362c; --green:#1f9d55; --amber:#c47f00; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin:0; font-family:"Segoe UI", "Nirmala UI", Arial, sans-serif; color:var(--ink); font-size:10.2pt; line-height:1.55; }
+  .bn { font-family:"Nirmala UI","Noto Sans Bengali","Segoe UI",sans-serif; }
+  h1,h2,h3,h4 { line-height:1.25; margin:0; }
+  h2 { font-size:19pt; color:var(--navy); margin:0 0 4mm; padding-top:1mm; }
+  h2 .num { color:var(--blue); margin-right:6px; }
+  h3 { font-size:12.5pt; color:var(--navy); margin:6mm 0 2mm; }
+  h4 { font-size:10.5pt; margin:4mm 0 1.5mm; color:#183a6b; }
+  p { margin:0 0 2.6mm; }
+  ul, ol { margin:0 0 3mm; padding-left:5.5mm; }
+  li { margin:0 0 1.2mm; }
+  code, .mono { font-family:Consolas, "Cascadia Mono", monospace; font-size:8.8pt; background:#eef3fa; padding:0.3mm 1.2mm; border-radius:3px; color:#13325e; }
+  pre { font-family:Consolas, monospace; font-size:8.5pt; background:#0b1730; color:#d6e4ff; padding:3.5mm 4mm; border-radius:6px; margin:0 0 3.5mm; white-space:pre-wrap; line-height:1.45; break-inside:avoid; }
+  table { width:100%; border-collapse:collapse; margin:0 0 4mm; font-size:9pt; break-inside:auto; }
+  th { text-align:left; background:var(--navy); color:#fff; font-weight:600; padding:2mm 2.4mm; }
+  td { padding:1.8mm 2.4mm; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr { break-inside:avoid; }
+  tbody tr:nth-child(even) td { background:#f8fafd; }
+  a { color:var(--blue); text-decoration:none; }
+  .section { break-before:page; }
+  .lead { font-size:11.2pt; color:#21385f; }
+  .muted { color:var(--muted); }
+  .small { font-size:8.6pt; }
+  .callout { border-left:4px solid var(--blue); background:var(--soft); padding:3mm 4mm; border-radius:0 6px 6px 0; margin:0 0 4mm; break-inside:avoid; }
+  .callout.warn { border-color:var(--amber); background:#fff8eb; }
+  .callout.good { border-color:var(--green); background:#effaf3; }
+  .callout.red { border-color:var(--red); background:#fff1f0; }
+  .callout b:first-child { color:var(--navy); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:4mm; margin-bottom:4mm; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:3.5mm; margin-bottom:4mm; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:3.5mm 4mm; break-inside:avoid; background:#fff; }
+  .card h4 { margin-top:0; }
+  .stat { border:1px solid var(--line); border-radius:8px; padding:3mm 3.5mm; text-align:left; break-inside:avoid; }
+  .stat b { display:block; font-size:18pt; color:var(--blue); line-height:1.1; }
+  .stat span { font-size:8.5pt; color:var(--muted); }
+  .tag { display:inline-block; font-size:7.6pt; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:#fff; background:var(--blue); padding:0.4mm 1.8mm; border-radius:3px; margin-right:1.5mm; vertical-align:1px; }
+  .tag.green { background:var(--green); } .tag.amber { background:var(--amber); } .tag.red { background:var(--red); } .tag.navy { background:var(--navy); }
+  figure { margin:0 0 4mm; break-inside:avoid; }
+  figure img { width:100%; border-radius:6px; display:block; border:1px solid var(--line); }
+  figcaption { font-size:8.4pt; color:var(--muted); margin-top:1.5mm; }
+  .kbd { font-family:Consolas,monospace; font-size:8.5pt; border:1px solid #c5d2e4; border-bottom-width:2px; border-radius:3px; padding:0 1.2mm; background:#fff; }
+
+  /* Cover */
+  .cover { height:297mm; width:210mm; position:relative; background:#030817; color:#fff; overflow:hidden; break-after:page; }
+  .cover img.bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:100% 50%; opacity:.95; }
+  .cover .shade { position:absolute; inset:0; background:linear-gradient(180deg, rgba(3,8,23,.15) 0%, rgba(3,8,23,.35) 45%, rgba(3,8,23,.96) 78%); }
+  .cover .content { position:absolute; left:18mm; right:18mm; bottom:22mm; }
+  .cover .kicker { color:#5cc2ff; letter-spacing:3px; font-size:10pt; font-weight:600; }
+  .cover h1 { font-size:40pt; font-weight:700; margin:3mm 0 2mm; letter-spacing:-.5px; }
+  .cover h1 span { color:#38b6ff; }
+  .cover .sub { font-size:15pt; color:#cfe0f5; margin-bottom:8mm; }
+  .cover .meta { display:grid; grid-template-columns:repeat(3,1fr); gap:5mm; border-top:1px solid #ffffff33; padding-top:5mm; font-size:9pt; color:#b8c9e2; }
+  .cover .meta b { display:block; color:#fff; font-size:10pt; margin-bottom:1mm; }
+
+  /* Contents */
+  .toc { columns:2; column-gap:10mm; font-size:10.2pt; }
+  .toc div { break-inside:avoid; padding:1.6mm 0; border-bottom:1px dotted #c9d5e6; display:flex; gap:3mm; }
+  .toc div b { color:var(--blue); min-width:7mm; }
+
+  /* Diagrams */
+  .arch { display:grid; grid-template-columns:1fr; gap:2.5mm; margin:2mm 0 4mm; break-inside:avoid; }
+  .layer { border:1.5px solid var(--line); border-radius:8px; padding:2.5mm 3.5mm; }
+  .layer .t { font-weight:700; font-size:9pt; color:var(--navy); margin-bottom:1.5mm; text-transform:uppercase; letter-spacing:.6px; }
+  .boxes { display:flex; flex-wrap:wrap; gap:1.8mm; }
+  .boxes span { background:var(--soft); border:1px solid #c9d8ee; border-radius:5px; padding:1mm 2.2mm; font-size:8.4pt; }
+  .layer.client { border-color:#7fb3ff; } .layer.client .boxes span { background:#eaf3ff; }
+  .layer.server { border-color:#7ed3c0; } .layer.server .boxes span { background:#ebfaf5; border-color:#a8e2d3; }
+  .layer.data { border-color:#f1c27d; } .layer.data .boxes span { background:#fff6e8; border-color:#f3d6a6; }
+  .arrow { text-align:center; color:var(--muted); font-size:9pt; line-height:1; }
+  .flow { display:flex; align-items:stretch; gap:2mm; margin:2mm 0 4mm; break-inside:avoid; }
+  .flow > div { flex:1; border:1px solid var(--line); border-radius:7px; padding:2.5mm; font-size:8.5pt; background:#fbfcfe; }
+  .flow > div b { display:block; color:var(--navy); font-size:9pt; margin-bottom:1mm; }
+  .flow > i { align-self:center; color:var(--blue); font-style:normal; font-weight:700; }
+  .chart { break-inside:avoid; border:1px solid var(--line); border-radius:8px; padding:3mm 4mm; margin:0 0 4mm; }
+  .footer-note { font-size:8.2pt; color:var(--muted); border-top:1px solid var(--line); padding-top:2mm; margin-top:6mm; }
+</style>
+</head>
+<body>
+
+<!-- ============================== COVER ============================== -->
+<section class="cover">
+  <img class="bg" src="../../public/og.png" alt="">
+  <div class="shade"></div>
+  <div class="content">
+    <div class="kicker">NASA SPACE APPS CHALLENGE 2026 · TEAM BRIEFING</div>
+    <h1>Earth<span>Scope</span></h1>
+    <div class="sub">Climate Time Machine — the complete project report, A to Z</div>
+    <div class="meta">
+      <div><b>Live app</b>earthscope-climate.vercel.app</div>
+      <div><b>Focus</b>Dhaka & Bangladesh, works for any place on Earth</div>
+      <div><b>Report date</b>3 October 2026 · version after the 15-point programme</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== CONTENTS ============================== -->
+<section>
+  <h2>Contents</h2>
+  <div class="toc">
+    <div><b>1</b>The project in one page</div>
+    <div><b>2</b>The problem and our answer</div>
+    <div><b>3</b>Tour of the app, page by page</div>
+    <div><b>4</b>The science: how every number is made</div>
+    <div><b>5</b>Our key finding for Dhaka</div>
+    <div><b>6</b>Data sources</div>
+    <div><b>7</b>Architecture and technology</div>
+    <div><b>8</b>Code map: where everything lives</div>
+    <div><b>9</b>Server API reference</div>
+    <div><b>10</b>Bangla (বাংলা) and accessibility</div>
+    <div><b>11</b>Quality: tests, security, privacy, offline</div>
+    <div><b>12</b>Deployment and operations</div>
+    <div><b>13</b>How to run, change and ship it</div>
+    <div><b>14</b>Project history</div>
+    <div><b>15</b>Honest limitations</div>
+    <div><b>16</b>Roadmap</div>
+    <div><b>17</b>Demo script and judge Q&amp;A</div>
+    <div><b>18</b>Glossary</div>
+  </div>
+
+  <h3>How to read this report</h3>
+  <p>Everyone on the team should read sections <b>1–5</b> (what EarthScope is, what it does and why the numbers can be trusted) and <b>17</b> (how to present it). Developers continue with <b>7–13</b>. Section <b>15</b> lists what EarthScope does <i>not</i> claim — know it before talking to judges.</p>
+  <div class="callout"><b>One-sentence pitch.</b> EarthScope turns NASA Earth observations into a climate story anyone in Dhaka can check for themselves — 45 years of climate data, today's disasters and the safe places nearby, measured satellite change and IPCC sea-level projections — in English and বাংলা, with every number tested and its source shown.</div>
+</section>
+
+<!-- ============================== 1 ============================== -->
+<section class="section">
+  <h2><span class="num">1</span>The project in one page</h2>
+  <p class="lead">EarthScope is a free web app (it also installs on a phone) that answers four questions for any place: <b>How has the climate here changed? What is dangerous right now? How has the land changed? What could the future look like?</b></p>
+
+  <div class="grid3">
+    <div class="stat"><b>45 years</b><span>of NASA climate data per place (1981–2025), break-tested</span></div>
+    <div class="stat"><b>7 pages</b><span>Explorer, Live disasters, Atlas, Satellite, Future, Compare, Reports</span></div>
+    <div class="stat"><b>20+ sources</b><span>NASA, ECMWF, Copernicus, IPCC, USGS, GDACS, OpenStreetMap…</span></div>
+    <div class="stat"><b>2 languages</b><span>English and বাংলা — 830 interface strings, 0 missing</span></div>
+    <div class="stat"><b>41 tests</b><span>automated checks of the science code, all passing</span></div>
+    <div class="stat"><b>0 keys</b><span>needed to run — every data source is open</span></div>
+  </div>
+
+  <h3>Who it is for</h3>
+  <div class="grid3">
+    <div class="card"><h4>Citizens</h4>“Is Dhaka really getting hotter? Is a cyclone coming? Where is the nearest shelter? Is the air safe today?”</div>
+    <div class="card"><h4>Students</h4>Charts explained in plain language, a glossary, real NASA imagery and honest statistics to learn from.</div>
+    <div class="card"><h4>Planners &amp; NGOs</h4>Downloadable 8-page reports with full statistics, CSV data, land-cover and heat change, risk profile with evidence.</div>
+  </div>
+
+  <h3>What makes it different</h3>
+  <ul>
+    <li><b>It refuses to mislead.</b> NASA POWER data for Bangladesh contain an artificial 1 °C drop in 1997. A naive app would tell Dhaka it is <i>cooling</i>. EarthScope detects the fault, excludes it, and confirms it against an independent dataset (ERA5).</li>
+    <li><b>Measured, not guessed.</b> Satellite maps are decoded pixel-by-pixel back to NASA's real values (land-cover class, vegetation index, surface temperature in 0.6 K steps).</li>
+    <li><b>Useful today, not only for 2050.</b> Live cyclones, floods, earthquakes and fires, heat and air-quality warnings, shelters outside danger zones, alerts for saved places and an offline safety pack.</li>
+    <li><b>Built for Bangladesh.</b> Full Bangla interface, Bangla AI answers, BMD heatwave classes, FFWC/DDM links, 999 and 1090 emergency numbers, delta-subsidence notes.</li>
+  </ul>
+</section>
+
+<!-- ============================== 2 ============================== -->
+<section class="section">
+  <h2><span class="num">2</span>The problem and our answer</h2>
+  <h3>The problem</h3>
+  <p>Bangladesh is among the countries most exposed to climate change: heat waves, monsoon floods, cyclones and storm surges, sea-level rise on a sinking delta, and some of the worst air in the world. The data to understand these risks exist — NASA and other agencies publish them openly — but they are scattered across dozens of portals, in technical formats, in English, and often with traps (data breaks, colour-coded images, uncertain trends) that lead non-experts to wrong conclusions.</p>
+  <h3>Our answer</h3>
+  <div class="flow">
+    <div><b>Collect</b>20+ open sources, fetched live by our server and cached sensibly.</div><i>→</i>
+    <div><b>Check</b>Break tests, ERA5 cross-check, significance tests, exact pixel decoding.</div><i>→</i>
+    <div><b>Explain</b>Plain-language story, charts, maps and AI answers — in English or বাংলা.</div><i>→</i>
+    <div><b>Act</b>Safety checks, shelters, alerts, offline pack, reports to share with decision-makers.</div>
+  </div>
+  <h3>Challenge fit</h3>
+  <p>EarthScope uses NASA Earth-science data as its core (NASA POWER, GIBS imagery from MODIS, VIIRS, Landsat/HLS, GPM, EONET events, GISTEMP, SEDAC population, LANCE flood product) and adds partner data where NASA has no product for the job (ECMWF ERA5 for validation, Copernicus CAMS for air quality, IPCC AR6 for sea level, OpenStreetMap for shelters).</p>
+  <div class="callout good"><b>Design principles we kept throughout.</b> (1) Every number shows its source. (2) Never call a trend real unless it is statistically significant. (3) Never show a scenario as a forecast. (4) Never present EarthScope as an official warning service — always point to BMD/DDM and 999. (5) It must work in Bangla and on a cheap phone.</div>
+</section>
+
+<!-- ============================== 3 ============================== -->
+<section class="section">
+  <h2><span class="num">3</span>Tour of the app, page by page</h2>
+  <p>Every page has its own web address, so a link can be shared directly. Heavy parts (3D globe, maps, report) load only when you open them.</p>
+
+  <h3>3.1 Earth explorer <span class="mono">/</span></h3>
+  <ul>
+    <li><b>Realistic 3D globe</b> (three.js): NASA Blue Marble by day, VIIRS city lights by night, a moving day/night line, atmosphere glow, stars — and <b>real cloud cover from two days ago</b>, rebuilt every day from NASA satellites (§4.8). Click any place to explore it.</li>
+    <li><b>Place search</b> for any town or city worldwide (Open-Meteo / GeoNames).</li>
+    <li><b>Metric cards</b>: mean temperature, rainfall, the <b>Trend detective</b> (°C per decade with 95% interval and p-value) and the length of the consistent record.</li>
+    <li><b>Data-quality note</b> when a data break is found, and the <b>ERA5 cross-check</b> card (§4.2).</li>
+    <li><b>Time machine</b>: a year slider 1981–2050 with play button; globe layers for temperature, rainfall, vegetation and flood exposure; a NASA data panel (global temperature anomaly, Arctic warming, sea-ice extent, CO₂).</li>
+    <li><b>Your climate story</b>: a plain-language narrative of the place, written natively in Bangla when Bangla is selected.</li>
+  </ul>
+
+  <h3>3.2 Live disasters <span class="mono">/disasters</span></h3>
+  <ul>
+    <li>Map of what is happening <b>now</b>: storms, floods, earthquakes, wildfires, volcanoes, drought, dust, from NASA EONET, GDACS and USGS (refreshed every 5 minutes). Official cyclone forecast tracks with times, uncertainty cone and wind zones.</li>
+    <li>NASA layers: VIIRS fires, GPM rain, the LANCE MODIS <b>flood map</b> (recoloured so unusual floods stand out), SEDAC population, <b>MODIS aerosols</b> (smoke, dust, haze) and a Bangladesh heat-watch layer.</li>
+    <li><b>Am I safe?</b> — checks your GPS location, a typed place or a map click against every hazard zone; gives protective actions for that hazard, the shortest way out of the zone, and the nearest shelters, hospitals and assembly points <i>outside</i> the zones with walking routes. Also shows a 7-day <b>heat outlook</b> (heat index, BMD classes) and <b>air quality</b> (CAMS forecast, US AQI, WHO PM2.5 comparison, health advice).</li>
+    <li><b>Event impact</b>: estimated people exposed (SEDAC population) and storm-surge heights for cyclones.</li>
+    <li><b>My places</b>: save Home/Work/School/Family; EarthScope alerts you (notifications) if a hazard zone, a cyclone forecast or dangerous heat reaches them, and keeps an <b>offline safety pack</b> that can be shared by SMS.</li>
+  </ul>
+
+  <h3>3.3 Climate atlas <span class="mono">/atlas</span></h3>
+  <p>A choropleth map that zooms World → country → states/divisions → districts. Shows temperature change, mean temperature, rainfall change or annual rainfall for every year 1981–2025, with play-through animation, climate stripes, a fastest-warming ranking and NASA imagery of that year. Each region is break-tested separately.</p>
+</section>
+
+<section>
+  <h3>3.4 Satellite comparison <span class="mono">/satellite</span></h3>
+  <p>Compares two years for the same square (45, 90 or 240 km). Four modes:</p>
+  <table>
+    <thead><tr><th style="width:24%">Mode</th><th>What it measures</th><th style="width:26%">NASA product</th></tr></thead>
+    <tbody>
+      <tr><td><b>Land cover change</b></td><td>Share of built-up, cropland, forest, water, etc. in each year; km² of new built-up land; change map. <b>Time-lapse</b> plays every year 2001–2024 with a built-up growth chart. On-map colour key; optional overlay on a present-day satellite photo.</td><td>MODIS MCD12Q1 (IGBP), 500 m, yearly</td></tr>
+      <tr><td><b>Vegetation (NDVI)</b></td><td>Greenness in the same season of both years (3 composites averaged), dense-vegetation share, greener/browner areas.</td><td>MODIS MOD13Q1, 250 m, 16-day</td></tr>
+      <tr><td><b>Surface heat</b></td><td>Daytime ground/roof temperature, area mean, hot-spot intensity (urban heat island), and where land warmed <i>more than its surroundings</i>.</td><td>MODIS MOD11A2 LST, 1 km, 8-day</td></tr>
+      <tr><td><b>Satellite view</b></td><td>Like-for-like 30 m photos: automatic search for the clearest pass in the same month of both years; haze removal.</td><td>HLS Landsat 8/9 + Sentinel-2; MODIS 7-2-1</td></tr>
+    </tbody>
+  </table>
+  <p>Views: <b>Swipe</b> (drag the handle), <b>Side by side</b>, <b>Change map</b> and (land cover) <b>Time-lapse</b>.</p>
+
+  <h3>3.5 Future scenarios <span class="mono">/future</span></h3>
+  <ul>
+    <li>Transparent “what-if” sliders: extra warming (0–4 °C) and rainfall change (±40%) by 2050, applied to the latest observation. Clearly labelled as an educational sensitivity test, <b>not</b> a climate-model projection.</li>
+    <li><b>Sea-level panel</b>: IPCC AR6 global sea-level projections for low, intermediate and very high emissions (2050 and 2100, with likely ranges), next to the place's <b>ground height</b> (Copernicus 90 m elevation model) and a verdict for its elevation band. In the Bengal delta it adds the land-subsidence warning.</li>
+  </ul>
+
+  <h3>3.6 Compare places <span class="mono">/compare</span></h3>
+  <p>Two climate records side by side (same NASA variables, same years), each break-tested, with a statistical verdict on whether one is really changing faster than the other (overlapping 95% intervals).</p>
+
+  <h3>3.7 Climate reports <span class="mono">/reports</span></h3>
+  <p>An 8-page A4 assessment for any place: cover and key findings in IPCC likelihood language; climate record charts; climate extremes from daily data (hot days, warm nights, humid-heat days, heavy rain, dry spells); satellite evidence; a risk profile where every risk shows the measured evidence behind it; “right now” (hazards, heat, air quality, shelters, official contacts); methods, sources and limitations; QR code and share link. Three editions — <b>Citizen, Student, Planner</b> — in English or বাংলা. Save as PDF, download CSV, saved in the browser.</p>
+
+  <h3>3.8 Ask Earth (AI guide)</h3>
+  <p>A chat panel on every page. Answers come from Claude (when an Anthropic key is configured) or a free open AI model, grounded only in EarthScope's computed data and live feeds, with sources and follow-up questions. If AI is unavailable it falls back to a rule-based offline guide. It answers in the interface language (Bangla when বাংলা is selected).</p>
+</section>
+
+<!-- ============================== 4 ============================== -->
+<section class="section">
+  <h2><span class="num">4</span>The science: how every number is made</h2>
+
+  <h3>4.1 Detecting data breaks (homogeneity)</h3>
+  <p>NASA POWER is a <i>reanalysis</i> (MERRA-2): a weather model constantly corrected by observations. When the set of observations changes (new satellites, stations lost), the series can jump. Over Bangladesh, POWER temperature drops about <b>1 °C in 1997</b> and rainfall jumps again around 2016 — not real climate.</p>
+  <p><b>Method:</b> two-phase regression with a common slope (Lund &amp; Reeves 2002). For each possible break year we fit “trend” vs “trend + step” and compute an F statistic; the maximum F is compared with 99% critical values we computed by Monte-Carlo simulation (20,000 random series per length). A break must also be large enough to matter (≥ 0.3 °C, or ≥ 15% of mean rainfall). Years before a break are shown grey and excluded from every trend. Code: <code>lib/homogeneity.ts</code>, <code>lib/climate.ts</code>.</p>
+
+  <h3>4.2 Independent cross-check with ERA5</h3>
+  <p>ERA5 (ECMWF / Copernicus) is a separate reanalysis with a different model and assimilation system. For each place EarthScope downloads ERA5 daily data (1981–2025), makes annual values and compares them with POWER: year-to-year correlation, average bias, trends over the same years, rainfall ratio. Most importantly it runs the break test on the <b>difference series POWER − ERA5</b>: a step there proves the break belongs to one dataset, not to the climate (the “reference series” method of relative homogenisation). Code: <code>lib/crosscheck.ts</code>, <code>/api/crosscheck</code>.</p>
+
+  <h3>4.3 Honest trend statistics</h3>
+  <ul>
+    <li>Trend = least-squares slope, reported per decade, with a <b>95% confidence interval</b>.</li>
+    <li>Significance from a t-test <b>corrected for autocorrelation</b> (effective sample size, Santer et al. 2000) — climate years are not independent, and ignoring this makes trends look more certain than they are.</li>
+    <li>The words “warming” or “cooling” appear only when p &lt; 0.05; otherwise EarthScope says “no clear trend yet”. Reports use IPCC calibrated likelihood language.</li>
+    <li>Decade comparisons need ≥ 20 consistent years. Code: <code>lib/stats.ts</code>.</li>
+  </ul>
+
+  <h3>4.4 Climate extremes</h3>
+  <p>From NASA POWER <i>daily</i> data, following the WMO ETCCDI index conventions with fixed thresholds: hot days (Tmax ≥ 35 °C), warm nights (Tmin ≥ 25 °C), humid-heat days (wet-bulb ≥ 27 °C), frost days, hottest day, heavy-rain days (≥ 50 mm), wettest day, longest dry spell. Computed only over the break-free years. Code: <code>lib/extremes.ts</code>.</p>
+</section>
+
+<section>
+  <h3>4.5 Decoding satellite maps exactly</h3>
+  <p>NASA GIBS serves measured products as coloured images using fixed published colour maps. EarthScope downloads the PNG images and converts each pixel back to its value using those colour maps:</p>
+  <ul>
+    <li><b>Land cover</b> (MODIS MCD12Q1): 17 IGBP classes, each a unique colour → grouped into built-up, cropland, forest, shrub/grass, wetland, water, barren.</li>
+    <li><b>NDVI</b> (MOD13Q1): a 250-step palette → vegetation index.</li>
+    <li><b>Land-surface temperature</b> (MOD11A2): 250 colours in <b>0.6 K steps</b> from −73 °C to +77 °C. In testing, all 65,536 pixels of a Dhaka tile decoded exactly.</li>
+  </ul>
+  <p>Comparisons always use the <b>same product and the same season</b> in both years, so a difference reflects the land, not the sensor. Code: <code>lib/earth-change.ts</code>.</p>
+
+  <h3>4.6 Surface heat: change relative to the surroundings</h3>
+  <p>One April can be hotter than another everywhere because of weather. So besides the area-mean change, EarthScope removes the area-wide shift and marks pixels that warmed or cooled <b>≥ 1.5 °C more than the area as a whole</b> — typically new buildings and lost trees (warmer) or new water and parks (cooler). It also reports <b>hot-spot intensity</b> (mean of the hottest 10% minus the median), a standard surface urban-heat-island measure.</p>
+
+  <h3>4.7 Air quality and sea level</h3>
+  <ul>
+    <li><b>Air quality</b>: Copernicus CAMS hourly forecast (PM2.5, PM10, ozone, NO₂) via Open-Meteo; US EPA AQI categories with official health advice; PM2.5 compared with the WHO 2021 guideline (15 µg/m³ daily). Code: <code>lib/air-quality.ts</code>.</li>
+    <li><b>Sea level</b>: IPCC AR6 WGI Table 9.9 global-mean projections (e.g. SSP2-4.5 in 2100: 0.56 m, likely 0.44–0.76 m) and observed rise since 1901 (≈0.20 m, now ≈3.7 mm/yr). Ground height from Copernicus GLO-90. Code: <code>lib/sea-level.ts</code>.</li>
+  </ul>
+
+  <h3>4.8 Daily real clouds on the globe</h3>
+  <figure style="width:78%;margin-left:auto;margin-right:auto">
+    <img src="../../public/textures/earth-clouds.jpg" alt="Cloud mask">
+    <figcaption>A real cloud mask built from NASA VIIRS imagery (white = cloud). Cyclones and weather fronts of that day are visible.</figcaption>
+  </figure>
+  <p>The server downloads the NOAA-20 and Suomi-NPP true-colour images of a day plus the previous 6 days. Clouds move but ice, snow and deserts don't, so the darkest value of each pixel over the past days is the ground; only what is brighter (and white) on the chosen day is cloud. Taking the darker of the two satellite passes removes ocean sun-glint. Built in about 8 seconds, cached for a year per date, pre-built every night by a scheduled job. Code: <code>lib/clouds.ts</code>, <code>/api/clouds</code>.</p>
+
+  <h3>4.9 Hazard zones and safety</h3>
+  <p>Impact zones are distance estimates from magnitude, wind speed or alert level (or measured footprints where GDACS provides them); cyclone positions along forecast tracks are interpolated in time. Shelters, hospitals and assembly points come from OpenStreetMap; any inside a hazard zone are hidden. This is a screening aid, never an official warning. Code: <code>lib/hazards.ts</code>, <code>lib/safe-places.ts</code>.</p>
+</section>
+
+<!-- ============================== 5 ============================== -->
+<section class="section">
+  <h2><span class="num">5</span>Our key finding for Dhaka</h2>
+  <p class="lead">This is the strongest story to tell judges: it shows why careful data handling matters.</p>
+  <table>
+    <thead><tr><th>Question</th><th>Naive answer (raw NASA POWER)</th><th>EarthScope's answer</th></tr></thead>
+    <tbody>
+      <tr><td>Is Dhaka warming?</td><td class="small">Full record 1981–2025 shows <b>cooling</b> — because of the artificial 1997 drop.</td><td class="small">The 1997 step is detected (≈ −1 °C) and excluded. POWER after 1997 shows <b>no clear trend</b> (0.00 °C/decade).</td></tr>
+      <tr><td>Is the 1997 drop real?</td><td class="small">Cannot tell.</td><td class="small"><b>No.</b> The POWER − ERA5 difference series itself jumps −1.0 °C in 1997–98: the fault is in POWER.</td></tr>
+      <tr><td>So what is the real trend?</td><td class="small">—</td><td class="small">ERA5 has no break and shows <b>+0.21 °C per decade</b> over 1981–2025 (+0.24 since 1997). Agreement POWER vs ERA5 after 1997 is weak (r = 0.47), so EarthScope shows the cross-check openly.</td></tr>
+      <tr><td>How has the land changed?</td><td class="small">—</td><td class="small">Built-up share of the 45 km Dhaka square: <b>13.9% (2001) → 19.5% (2024)</b>, about <b>109 km²</b> more. Outskirts warmed more than their surroundings (surface heat change map).</td></tr>
+      <tr><td>Is the air safe?</td><td class="small">—</td><td class="small">On test days the US AQI was 151–168 (“Unhealthy”), PM2.5 ≈ 6× the WHO daily guideline.</td></tr>
+      <tr><td>Sea level?</td><td class="small">—</td><td class="small">Central Dhaka ≈ 19 m above sea level → not directly flooded by the sea, but backwater, waterlogging and salinity reach inland; the delta is sinking several mm/year in many places.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><b>How to say it.</b> “Raw NASA data would tell Dhaka it is cooling. EarthScope found a 1997 fault in the data, proved it with a second, independent dataset, and shows the real picture: about +0.2 °C per decade of warming, a city that grew by over 100 km² of concrete, and air that is unhealthy on many days.”</div>
+  <p class="small muted">Numbers were produced by the live app on 3 October 2026; air quality and hazards change daily.</p>
+</section>
+
+<!-- ============================== 6 ============================== -->
+<section class="section">
+  <h2><span class="num">6</span>Data sources</h2>
+  <table>
+    <thead><tr><th style="width:27%">Source</th><th>Used for</th><th style="width:20%">How often</th></tr></thead>
+    <tbody>
+      <tr><td><b>NASA POWER</b> (MERRA-2)</td><td>Monthly and daily temperature, rainfall, wet-bulb; atlas grid</td><td>On demand, cached 1 day</td></tr>
+      <tr><td><b>NASA GIBS</b></td><td>Blue Marble, Black Marble, VIIRS clouds, MODIS land cover, NDVI, LST, aerosols, true colour, HLS Landsat/Sentinel-2, GPM rain, VIIRS fires, LANCE floods, SEDAC population</td><td>Daily to yearly products</td></tr>
+      <tr><td><b>NASA EONET</b></td><td>Open natural events</td><td>Every 5 min</td></tr>
+      <tr><td><b>NASA GISTEMP v4</b>, <b>NSIDC</b> sea ice, <b>NOAA GML</b> CO₂</td><td>Global context on the globe, in reports and Ask Earth</td><td>Built by script</td></tr>
+      <tr><td><b>ECMWF ERA5</b> (via Open-Meteo)</td><td>Independent cross-check of every record</td><td>Cached 30 days</td></tr>
+      <tr><td><b>Copernicus CAMS</b> (via Open-Meteo)</td><td>Air-quality forecast</td><td>Cached 30 min</td></tr>
+      <tr><td><b>Open-Meteo</b> forecast, geocoding, elevation</td><td>Heat outlook, place search, ground height (Copernicus GLO-90)</td><td>On demand</td></tr>
+      <tr><td><b>IPCC AR6 WGI</b></td><td>Sea-level projections, reference values</td><td>Static (published)</td></tr>
+      <tr><td><b>GDACS</b> (UN / EC JRC)</td><td>Alert levels, cyclone tracks, footprints, surge</td><td>Every 5 min</td></tr>
+      <tr><td><b>USGS</b></td><td>Earthquakes M4.5+</td><td>Every 5 min</td></tr>
+      <tr><td><b>OpenStreetMap</b> (Overpass)</td><td>Shelters, hospitals, assembly points, fire stations</td><td>On demand</td></tr>
+      <tr><td><b>geoBoundaries</b>, <b>Natural Earth</b></td><td>Country, state and district boundaries</td><td>Static / cached</td></tr>
+      <tr><td><b>Esri World Imagery</b></td><td>Close-zoom map imagery and the photo underlay</td><td>Map tiles</td></tr>
+      <tr><td><b>Anthropic Claude</b> / free open model</td><td>Ask Earth answers (optional)</td><td>Per question, rate-limited</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">All sources are open or free for this use; attribution is shown in the app and in every report.</p>
+</section>
+
+<!-- ============================== 7 ============================== -->
+<section class="section">
+  <h2><span class="num">7</span>Architecture and technology</h2>
+  <div class="arch">
+    <div class="layer client"><div class="t">Browser (client)</div>
+      <div class="boxes"><span>React 19 app shell + routing</span><span>3D globe (three.js)</span><span>Maps (Leaflet)</span><span>Satellite pixel decoding (canvas)</span><span>Climate report (print-to-PDF)</span><span>Ask Earth chat</span><span>i18n: English / বাংলা</span><span>Service worker (offline, alerts)</span></div></div>
+    <div class="arrow">▼ HTTPS requests to our own API ▲</div>
+    <div class="layer server"><div class="t">Server (Next.js API routes on Vercel)</div>
+      <div class="boxes"><span>/api/climate</span><span>/api/crosscheck</span><span>/api/extremes</span><span>/api/power-grid</span><span>/api/disasters</span><span>/api/heat</span><span>/api/air</span><span>/api/safe-places</span><span>/api/imagery</span><span>/api/clouds (+ cron)</span><span>/api/ask (AI)</span><span>rate limits · caching · error logs</span></div></div>
+    <div class="arrow">▼ fetch, cache, validate ▲</div>
+    <div class="layer data"><div class="t">Open data providers</div>
+      <div class="boxes"><span>NASA POWER</span><span>NASA GIBS</span><span>EONET</span><span>GDACS</span><span>USGS</span><span>Open-Meteo (ERA5, CAMS, forecast)</span><span>OpenStreetMap</span><span>geoBoundaries</span><span>Anthropic</span></div></div>
+  </div>
+  <p><b>Why a server in the middle?</b> It hides keys, combines and cleans feeds (e.g. EONET + GDACS + USGS into one hazard list), enforces rate limits, and lets the content-delivery network cache results at the right frequency so the app is fast and kind to the free data services.</p>
+
+  <h3>Technology stack</h3>
+  <table>
+    <thead><tr><th style="width:28%">Area</th><th>Technology</th></tr></thead>
+    <tbody>
+      <tr><td>Framework</td><td>Next.js 16 (App Router) with React 19 and TypeScript; also builds for Cloudflare Workers via vinext/Vite</td></tr>
+      <tr><td>UI</td><td>Custom CSS (dark navy theme), Radix UI primitives, lucide icons, sonner toasts; self-hosted Noto Sans Bengali</td></tr>
+      <tr><td>3D &amp; maps</td><td>three.js (custom day/night/cloud shader), Leaflet with NASA GIBS and Esri tiles</td></tr>
+      <tr><td>AI</td><td>Anthropic SDK (Claude, streaming, tool use) or any OpenAI-compatible free model; offline rule engine</td></tr>
+      <tr><td>Images</td><td>jpeg-js (server-side cloud mask), canvas decoding in the browser, sharp (link-preview image)</td></tr>
+      <tr><td>Quality</td><td>Vitest (41 tests), ESLint, TypeScript strict, i18n coverage checker</td></tr>
+      <tr><td>Hosting</td><td>Vercel (functions up to 60 s, CDN, daily cron); optional Upstash Redis for shared rate limits</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Performance</h3>
+  <ul>
+    <li><b>Code splitting</b>: the app shell is under 48 KB; three.js (≈524 KB), Leaflet (≈148 KB) and the report (≈136 KB) load only when needed. Before: one 1.2 MB bundle.</li>
+    <li><b>Caching</b>: each API sets cache headers matched to how often its source changes (5 min for hazards, 30 min for air, 30 days for ERA5, 1 year per date for clouds).</li>
+    <li><b>Offline</b>: the service worker keeps the app shell and the last live data; the safety pack works without network.</li>
+  </ul>
+</section>
+
+<!-- ============================== 8 ============================== -->
+<section class="section">
+  <h2><span class="num">8</span>Code map: where everything lives</h2>
+  <pre>app/                     Pages (one per view) and server API routes
+  page.tsx, disasters/, atlas/, satellite/, future/, compare/, reports/
+  api/*/route.ts         18 API routes (see section 9)
+  layout.tsx             Site metadata, link preview, global CSS
+  *.css                  Styles: terra, maps, earthscope (theme), report (print)
+components/
+  app/                   App shell and views
+    shell.tsx            State, routing, language, service worker, update prompt
+    nav.tsx, hero.tsx    Sidebar, page headings, animated planet header
+    explore.tsx          Explorer page: metric cards, data-quality note, story
+    crosscheck.tsx       ERA5 cross-check card
+    views.tsx            Future, Compare, Reports views
+    dialogs.tsx, lazy.tsx, error-boundary.tsx, charts.tsx, place-picker.tsx
+  earth-globe.tsx        3D globe
+  disaster-map.tsx       Live disasters + "Am I safe?"
+  hazard-panels.tsx, my-places.tsx, air-quality.tsx
+  climate-atlas.tsx      Atlas
+  satellite-compare.tsx  Satellite comparison (4 modes, swipe, time-lapse)
+  sea-level.tsx          Sea-level panel
+  climate-report.tsx     8-page report
+  ask-earth.tsx          AI chat
+lib/                     Science and data code (no UI)
+  stats.ts, homogeneity.ts, climate.ts, crosscheck.ts, extremes.ts
+  earth-change.ts        Land cover, NDVI, LST decoding and comparison
+  air-quality.ts, sea-level.ts, heat.ts, hazards.ts, hazard-feed.ts
+  safe-places.ts, safety-watch.ts, geo.ts, locate.ts, clouds.ts
+  ask-ai.ts, ask-rules.ts  AI guide and offline guide
+  i18n.tsx, i18n-bn.ts, climate-bn.ts   Languages
+  rate-limit.ts, telemetry.ts           Protection and error reports
+  report/                Report model, data gathering, translations, share links
+tests/                   Vitest unit tests
+scripts/                 Data builders, i18n checker, OG image, build helpers
+public/                  Textures, data files, icons, service worker, og.png</pre>
+  <p class="small muted">About 14,000 lines of project code (excluding generated UI primitives), 13 commits in the improvement programme.</p>
+</section>
+
+<!-- ============================== 9 ============================== -->
+<section class="section">
+  <h2><span class="num">9</span>Server API reference</h2>
+  <table>
+    <thead><tr><th style="width:22%">Route</th><th>Purpose</th><th style="width:22%">Upstream</th></tr></thead>
+    <tbody>
+      <tr><td><code>/api/climate</code></td><td>Monthly temperature and rainfall record 1981–2025 for a point</td><td>NASA POWER</td></tr>
+      <tr><td><code>/api/crosscheck</code></td><td>ERA5 annual series for the cross-check</td><td>Open-Meteo archive (ERA5)</td></tr>
+      <tr><td><code>/api/extremes</code></td><td>Daily data → ETCCDI-style extreme indices</td><td>NASA POWER daily</td></tr>
+      <tr><td><code>/api/power-grid</code></td><td>10° tiles of gridded climate for the atlas</td><td>NASA POWER regional</td></tr>
+      <tr><td><code>/api/boundaries</code></td><td>State/district boundaries</td><td>geoBoundaries</td></tr>
+      <tr><td><code>/api/disasters</code></td><td>Unified live hazard feed with forecasts</td><td>EONET, GDACS, USGS</td></tr>
+      <tr><td><code>/api/event-impact</code></td><td>People exposed, storm surge for one event</td><td>GDACS, SEDAC</td></tr>
+      <tr><td><code>/api/heat</code></td><td>7-day heat index and BMD heatwave class</td><td>Open-Meteo forecast</td></tr>
+      <tr><td><code>/api/air</code></td><td>Air quality now + 5-day forecast</td><td>Copernicus CAMS</td></tr>
+      <tr><td><code>/api/safe-places</code></td><td>Shelters, hospitals, assembly points nearby</td><td>OpenStreetMap Overpass</td></tr>
+      <tr><td><code>/api/elevation</code></td><td>Ground height</td><td>Copernicus GLO-90</td></tr>
+      <tr><td><code>/api/imagery</code></td><td>Satellite snapshots (land cover, NDVI, LST, HLS, MODIS)</td><td>NASA GIBS WMS</td></tr>
+      <tr><td><code>/api/clouds</code>, <code>/warm</code></td><td>Daily cloud mask for the globe; nightly pre-build</td><td>NASA GIBS VIIRS</td></tr>
+      <tr><td><code>/api/places</code>, <code>/api/locate</code></td><td>Place search; approximate location fallback</td><td>Open-Meteo / GeoNames, IP lookup</td></tr>
+      <tr><td><code>/api/ask</code></td><td>Ask Earth, streamed answers</td><td>Claude or free model</td></tr>
+      <tr><td><code>/api/log</code></td><td>Receives browser error reports</td><td>—</td></tr>
+      <tr><td><code>/api/version</code></td><td>Current build id (open tabs offer “Reload”)</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <p>All routes validate their inputs (coordinates, dates, sizes) and costly routes are rate-limited per visitor with a daily cap per route.</p>
+</section>
+
+<!-- ============================== 10 ============================== -->
+<section class="section">
+  <h2><span class="num">10</span>Bangla (বাংলা) and accessibility</h2>
+  <ul>
+    <li><b>Whole interface in Bangla</b>: a switch at the top (EN | বাংলা), remembered per browser and chosen automatically for Bangla-language browsers.</li>
+    <li>All numbers, years and dates in <b>Bangla digits</b> (<span class="bn">২০২৫, ১৩.৯%</span>); Bangla typography with Noto Sans Bengali.</li>
+    <li><b>How it works:</b> components call <code>t("English text")</code>; <code>lib/i18n-bn.ts</code> holds the Bangla translation keyed by the English text (830+ strings). Missing strings fall back to English, never break.</li>
+    <li><b>Safety net:</b> <code>npm run i18n:check</code> lists untranslated strings; the test suite fails if any is missing or if a translation drops a <code>{placeholder}</code>.</li>
+    <li>The climate story, reports (all three editions) and Ask Earth answers are also in Bangla.</li>
+    <li>Accessibility: keyboard-operable sliders (arrow keys, Home/End), screen-reader labels on controls, sufficient colour contrast, works on phones (tested at 375 px width).</li>
+  </ul>
+  <div class="callout"><b>Adding a new sentence?</b> Write it in English inside <code>t("…")</code>, run <code>npm run i18n:check -- --missing</code>, add the Bangla line to <code>lib/i18n-bn.ts</code>, run <code>npm test</code>.</div>
+
+  <h2 style="margin-top:8mm"><span class="num">11</span>Quality: tests, security, privacy, offline</h2>
+  <h3>Automated tests (41, all passing)</h3>
+  <table>
+    <thead><tr><th style="width:30%">File</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr><td><code>tests/stats.test.ts</code></td><td>Trend slopes, confidence intervals, autocorrelation correction, t-table values, p-value formatting</td></tr>
+      <tr><td><code>tests/homogeneity.test.ts</code></td><td>Break test finds a planted step, ignores trends and tiny steps; <b>regression test on the real Dhaka record</b> (1997 break detected, no false “cooling”)</td></tr>
+      <tr><td><code>tests/crosscheck.test.ts</code></td><td>Daily → annual aggregation, correlation, agreement verdict, break confirmed through the difference series</td></tr>
+      <tr><td><code>tests/earth-change.test.ts</code></td><td>Every LST colour decodes exactly; relative-warming logic; composite calendars</td></tr>
+      <tr><td><code>tests/i18n.test.ts</code></td><td>Translator, Bangla digits, every placeholder kept, 0 missing translations</td></tr>
+      <tr><td><code>tests/data.test.ts</code></td><td>AQI categories, IPCC sea-level consistency, extremes indices, share-link privacy and tamper safety</td></tr>
+    </tbody>
+  </table>
+  <h3>Security and privacy</h3>
+  <ul>
+    <li>No accounts, no tracking. Saved places, reports and the safety pack stay in the user's browser.</li>
+    <li>Your location is used only to run the check; share links round coordinates to ~1 km.</li>
+    <li>Rate limits on every costly route (shared across servers with Upstash when configured); request size limits; input validation; markup stripped from shared links.</li>
+    <li>AI keys stay on the server; the free-model mode warns users not to type personal details.</li>
+    <li>Error boundaries keep one failing feature from blanking the app; browser errors are reported to <code>/api/log</code>.</li>
+  </ul>
+</section>
+
+<!-- ============================== 12 ============================== -->
+<section class="section">
+  <h2><span class="num">12</span>Deployment and operations</h2>
+  <ul>
+    <li><b>Production:</b> <a href="https://earthscope-climate.vercel.app">earthscope-climate.vercel.app</a> (Vercel project <i>earthscope-climate</i>; the old <i>terra-climate-time-machine</i> address still works).</li>
+    <li><b>Deploy:</b> <code>npx vercel deploy --prod --yes</code> from the project folder (requires being logged in to the team's Vercel account). Vercel runs <code>next build</code>.</li>
+    <li><b>Scheduled job:</b> <code>vercel.json</code> runs <code>/api/clouds/warm</code> daily at 00:15 UTC to pre-build the cloud map.</li>
+    <li><b>Updates reach users:</b> each build has an id; open tabs and installed apps check <code>/api/version</code> and show “A new version is available — Reload”. The service worker uses a fresh cache per build.</li>
+    <li><b>Logs:</b> Vercel dashboard → project → Logs (search <code>client-error</code> for browser errors).</li>
+  </ul>
+  <h3>Optional settings (environment variables)</h3>
+  <table>
+    <thead><tr><th style="width:38%">Variable</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Ask Earth uses Claude (best quality) and its tools</td></tr>
+      <tr><td><code>UPSTASH_REDIS_REST_URL</code> / <code>_TOKEN</code></td><td>Rate limits shared by all server instances</td></tr>
+      <tr><td><code>CRON_SECRET</code></td><td>Protects the nightly cloud job</td></tr>
+      <tr><td><code>ASK_EARTH_RATE_LIMIT</code>, <code>ASK_EARTH_DAILY_LIMIT</code></td><td>AI question limits (default 12 per 10 min, 500 per day)</td></tr>
+      <tr><td><code>ASK_EARTH_OPENAI_URL</code> / <code>_KEY</code> / <code>_MODEL</code></td><td>Use another free AI service (e.g. Groq)</td></tr>
+      <tr><td><code>NEXT_PUBLIC_SITE_URL</code></td><td>Public address used in link previews</td></tr>
+    </tbody>
+  </table>
+  <p>Add them in Vercel → Settings → Environment Variables (never commit keys). None is required.</p>
+
+  <h2 style="margin-top:8mm"><span class="num">13</span>How to run, change and ship it</h2>
+  <pre># one-time
+npm install
+
+npm run dev            # local app at http://localhost:5173
+npm test               # 41 unit tests
+npm run lint           # code style and React rules
+npm run i18n:check     # Bangla coverage
+npx next build         # production build (what Vercel runs)
+npx vercel deploy --prod --yes   # publish</pre>
+  <h3>Team workflow</h3>
+  <ol>
+    <li>Pull the latest code; create a branch for your change.</li>
+    <li>Make the change; keep science code in <code>lib/</code> and add a test for it.</li>
+    <li>Any new visible text goes through <code>t()</code> with a Bangla translation.</li>
+    <li>Run <code>npm test</code>, <code>npm run lint</code>, <code>npx next build</code> — all must pass.</li>
+    <li>Check the page in the browser in both languages and on a phone-sized window.</li>
+    <li>Commit with a clear message; deploy; open the live site and verify.</li>
+  </ol>
+  <h3>Maintenance scripts</h3>
+  <table>
+    <tbody>
+      <tr><td><code>node scripts/build-globe-textures.mts</code></td><td>Refresh Blue Marble, Black Marble and the fallback cloud map</td></tr>
+      <tr><td><code>node scripts/build-global-record.mts</code></td><td>Refresh GISTEMP, sea ice and CO₂ global record</td></tr>
+      <tr><td><code>node scripts/build-world-climate.mts</code></td><td>Rebuild country climate series for the atlas</td></tr>
+      <tr><td><code>node scripts/build-og-image.mjs</code></td><td>Rebuild the link-preview image</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================== 14 ============================== -->
+<section class="section">
+  <h2><span class="num">14</span>Project history</h2>
+  <h3>Before the improvement programme</h3>
+  <p>The project started as “Terra”, a climate time machine with the NASA POWER explorer, globe, atlas, live disasters with “Am I safe?”, satellite comparison, scenarios and reports. It was then renamed <b>EarthScope</b> with a new dark navy/blue design, a realistic three.js globe, an animated planet header, moving clouds, a rewritten satellite comparison and an 8-page bilingual climate report.</p>
+  <h3>The 15-point improvement programme (3 October 2026)</h3>
+  <table>
+    <thead><tr><th style="width:4%">#</th><th style="width:30%">Improvement</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Version control</td><td>Clean Git history; ready to publish on GitHub</td></tr>
+      <tr><td>2</td><td>README</td><td>Rewritten: features, trust, setup, settings, architecture</td></tr>
+      <tr><td>3</td><td>Link preview</td><td>1200×630 image from NASA textures + Open Graph/Twitter tags</td></tr>
+      <tr><td>4</td><td>Dead code</td><td>47 unused UI components, database scaffolding, 15 packages removed</td></tr>
+      <tr><td>5</td><td>Code splitting</td><td>Shell 1.2 MB → under 48 KB; heavy parts load on demand</td></tr>
+      <tr><td>6</td><td>Page URLs</td><td>Every view has its own address; back button works</td></tr>
+      <tr><td>7</td><td>Full Bangla</td><td>830+ strings, Bangla digits, Bangla AI answers, coverage test</td></tr>
+      <tr><td>8</td><td>Air quality</td><td>CAMS forecast card, NASA aerosol layer, safety status, report section</td></tr>
+      <tr><td>9</td><td>Sea level</td><td>IPCC AR6 projections + ground height + delta subsidence note</td></tr>
+      <tr><td>10</td><td>Surface heat</td><td>MODIS LST mode with exact decoding and relative-change map</td></tr>
+      <tr><td>11</td><td>ERA5 cross-check</td><td>Independent validation; confirmed the 1997 artefact</td></tr>
+      <tr><td>12</td><td>Tests</td><td>41 automated tests</td></tr>
+      <tr><td>13</td><td>Daily clouds</td><td>Server-built daily cloud map + nightly job</td></tr>
+      <tr><td>14</td><td>Protection</td><td>Rate limits (Upstash-ready) and error reporting</td></tr>
+      <tr><td>15</td><td>Refactor</td><td>1,000-line main file split into 9 focused modules</td></tr>
+    </tbody>
+  </table>
+  <h3>After the programme</h3>
+  <ul>
+    <li>Land-cover map key, satellite-photo underlay and matching colours; “savanna” explained for Bangladesh.</li>
+    <li>Land-cover <b>time-lapse</b> 2001–2024 with built-up growth chart.</li>
+    <li>Update prompt for open tabs and installed apps.</li>
+    <li><b>Bug fixed:</b> the swipe showed the later year on both sides (a layering conflict introduced with the photo underlay). Found by reproducing on the live site, fixed and verified in all four modes.</li>
+  </ul>
+</section>
+
+<!-- ============================== 15 ============================== -->
+<section class="section">
+  <h2><span class="num">15</span>Honest limitations</h2>
+  <p>Know these before presenting — judges respect teams that state their limits.</p>
+  <table>
+    <thead><tr><th style="width:28%">Limitation</th><th>What it means / what we do about it</th></tr></thead>
+    <tbody>
+      <tr><td>Reanalysis, not stations</td><td>NASA POWER and ERA5 are ~50 km / ~25 km grid estimates, not Dhaka weather-station readings. BMD station data would be the next step (not openly available).</td></tr>
+      <tr><td>POWER and ERA5 disagree after 1997 in Dhaka</td><td>Correlation is only 0.47; we show both and explain it rather than hide it.</td></tr>
+      <tr><td>Scenarios are not projections</td><td>The 2050 sliders are a simple sensitivity test, labelled as such; sea-level numbers are IPCC global means.</td></tr>
+      <tr><td>Hazard zones are estimates</td><td>Distance-based screening, not official warnings; shelters depend on OpenStreetMap volunteers' mapping.</td></tr>
+      <tr><td>Land-cover accuracy</td><td>MODIS land cover is ~74% accurate overall; changes under 1–2 points may be noise; Bangladesh rural land is often labelled “savanna”.</td></tr>
+      <tr><td>Satellite resolution</td><td>Land cover 500 m, LST 1 km, NDVI 250 m — good for city trends, not individual buildings (the 30 m view is visual only).</td></tr>
+      <tr><td>Surface vs air temperature</td><td>LST is the temperature of roofs and ground at ~10:30, hotter than air; clouds leave gaps.</td></tr>
+      <tr><td>AI answers</td><td>Grounded and sourced, but can still be wrong; we say so in the chat.</td></tr>
+      <tr><td>Free services</td><td>Depends on free public APIs; caching, retries and fallbacks reduce but cannot remove outages.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="margin-top:8mm"><span class="num">16</span>Roadmap</h2>
+  <div class="grid2">
+    <div class="card"><h4>Next weeks</h4><ul><li>Publish the code on GitHub (open source)</li><li>Add Upstash for shared rate limits</li><li>Push notifications even when the app is closed</li><li>Time-lapse for vegetation and surface heat</li></ul></div>
+    <div class="card"><h4>Next months</h4><ul><li>BMD station data (partnership)</li><li>FFWC river-level forecasts on the map</li><li>CMIP6 downscaled projections for Bangladesh</li><li>Ward-level heat-risk maps for Dhaka with population</li></ul></div>
+  </div>
+</section>
+
+<!-- ============================== 17 ============================== -->
+<section class="section">
+  <h2><span class="num">17</span>Demo script and judge Q&amp;A</h2>
+  <h3>5-minute demo</h3>
+  <table>
+    <thead><tr><th style="width:12%">Time</th><th style="width:26%">Show</th><th>Say</th></tr></thead>
+    <tbody>
+      <tr><td>0:00</td><td>Explorer, globe spinning</td><td>“EarthScope is a climate time machine for every place on Earth — built for Dhaka. These clouds are real, from NASA satellites two days ago.”</td></tr>
+      <tr><td>0:40</td><td>Dhaka metric cards + data-quality note + ERA5 card</td><td>“Raw NASA data say Dhaka is cooling. We found a 1997 fault, proved it with ERA5, and show the real warming: about +0.2 °C per decade.”</td></tr>
+      <tr><td>1:40</td><td>Switch to বাংলা</td><td>“Everything — the app, the reports, the AI — works in Bangla.”</td></tr>
+      <tr><td>2:00</td><td>Live disasters → Am I safe? → My location</td><td>“Right now: hazards, heat, unhealthy air, and the nearest shelters outside danger zones, even offline.”</td></tr>
+      <tr><td>3:00</td><td>Satellite → Land cover → Time-lapse; then Surface heat change map</td><td>“Watch Dhaka grow: 109 km² of new built-up land since 2001 — and where the ground got hotter than its surroundings.”</td></tr>
+      <tr><td>4:00</td><td>Future → sea-level panel; Export report</td><td>“IPCC sea level for this exact place, and a report a planner can print — in English or Bangla.”</td></tr>
+      <tr><td>4:40</td><td>Ask Earth: “Is Dhaka really getting hotter?”</td><td>“An AI guide that answers only from the data you just saw, with sources.”</td></tr>
+    </tbody>
+  </table>
+  <h3>Likely questions</h3>
+  <table>
+    <tbody>
+      <tr><td style="width:36%"><b>How do you know the 1997 drop is fake?</b></td><td>A statistical break test finds it, and the independent ERA5 dataset doesn't have it: the POWER − ERA5 difference jumps exactly then.</td></tr>
+      <tr><td><b>Why not use weather stations?</b></td><td>BMD station data are not openly available; reanalyses are global and consistent. We cross-check two of them and state the limit.</td></tr>
+      <tr><td><b>Is this an official warning system?</b></td><td>No — it is educational. It always links to BMD, FFWC, DDM and 999/1090.</td></tr>
+      <tr><td><b>How accurate are the satellite comparisons?</b></td><td>We decode NASA's own products exactly; their published accuracy (e.g. ~74% for land cover) is shown in the app.</td></tr>
+      <tr><td><b>What does it cost to run?</b></td><td>Nothing required: all data are free; hosting fits a free tier; AI is optional.</td></tr>
+      <tr><td><b>Can it work outside Bangladesh?</b></td><td>Yes — every feature works for any place; Bangladesh-specific extras switch on automatically there.</td></tr>
+      <tr><td><b>How do you avoid misleading people?</b></td><td>Significance tests, break detection, an independent cross-check, labels on scenarios, a limitations section in every report.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================== 18 ============================== -->
+<section class="section">
+  <h2><span class="num">18</span>Glossary</h2>
+  <table>
+    <tbody>
+      <tr><td style="width:28%"><b>Anomaly</b></td><td>Difference from a reference period (e.g. +0.5 °C warmer than the first decade).</td></tr>
+      <tr><td><b>AQI</b></td><td>Air Quality Index (US EPA scale 0–500); above 150 is “Unhealthy”.</td></tr>
+      <tr><td><b>Autocorrelation</b></td><td>Neighbouring years resemble each other, so there is less independent information than the number of years suggests.</td></tr>
+      <tr><td><b>Break / inhomogeneity</b></td><td>An artificial jump in a data series caused by a change in how it was measured.</td></tr>
+      <tr><td><b>CAMS</b></td><td>Copernicus Atmosphere Monitoring Service (EU air-quality forecasts).</td></tr>
+      <tr><td><b>Confidence interval (95%)</b></td><td>The range that contains the true trend with 95% confidence.</td></tr>
+      <tr><td><b>ERA5</b></td><td>ECMWF's global reanalysis; used here to cross-check NASA POWER.</td></tr>
+      <tr><td><b>ETCCDI</b></td><td>WMO expert team that defines standard climate-extreme indices.</td></tr>
+      <tr><td><b>GIBS</b></td><td>NASA Global Imagery Browse Services — serves satellite imagery and products.</td></tr>
+      <tr><td><b>Heat index</b></td><td>“Feels-like” temperature combining heat and humidity.</td></tr>
+      <tr><td><b>HLS</b></td><td>Harmonized Landsat Sentinel-2: 30 m imagery made comparable across satellites.</td></tr>
+      <tr><td><b>IGBP</b></td><td>The 17-class land-cover scheme used by MODIS.</td></tr>
+      <tr><td><b>IPCC AR6 / SSP</b></td><td>The UN climate panel's 6th assessment; SSPs are emission pathways (low to very high).</td></tr>
+      <tr><td><b>LST</b></td><td>Land-surface temperature: how hot the ground and roofs are.</td></tr>
+      <tr><td><b>MERRA-2</b></td><td>NASA's reanalysis behind NASA POWER.</td></tr>
+      <tr><td><b>MODIS / VIIRS</b></td><td>NASA satellite instruments imaging the whole Earth daily.</td></tr>
+      <tr><td><b>NDVI</b></td><td>Vegetation index from satellite light (higher = greener).</td></tr>
+      <tr><td><b>p-value</b></td><td>Chance of seeing a trend this strong if there were none; below 0.05 counts as significant.</td></tr>
+      <tr><td><b>Reanalysis</b></td><td>A weather model continuously corrected by observations, giving complete global data.</td></tr>
+      <tr><td><b>Surface urban heat island</b></td><td>Cities' ground surfaces being hotter than their surroundings.</td></tr>
+    </tbody>
+  </table>
+  <div class="footer-note">EarthScope — Climate Time Machine · NASA Space Apps Challenge 2026 · earthscope-climate.vercel.app · This report describes the deployed version of 3 October 2026. EarthScope is an educational tool, not an official warning service: in Bangladesh follow BMD and DDM and call 999 in an emergency.</div>
+</section>
+
+</body>
+</html>
