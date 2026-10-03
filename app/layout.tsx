@@ -17,6 +17,21 @@ export const metadata: Metadata = {
     apple: "/icons/icon-192.png",
   },
   appleWebApp: { capable: true, title: "EarthScope", statusBarStyle: "black-translucent" },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://earthscope-climate.vercel.app"),
+  alternates: { canonical: "/" },
+  keywords: ["climate change", "NASA", "Bangladesh", "Dhaka", "climate data", "disaster map", "sea level", "air quality", "জলবায়ু পরিবর্তন"],
+  openGraph: {
+    type: "website", siteName: "EarthScope", locale: "en_US", alternateLocale: ["bn_BD"],
+    title: "EarthScope — Climate Time Machine",
+    description: "45 years of NASA climate data, live disasters, satellite change, sea level and air quality for any place on Earth — in English and বাংলা.",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "EarthScope — Climate Time Machine, with a NASA view of Earth at night" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EarthScope — Climate Time Machine",
+    description: "45 years of NASA climate data, live disasters, satellite change, sea level and air quality — in English and বাংলা.",
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = { themeColor: "#040a18" };
