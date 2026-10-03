@@ -407,7 +407,11 @@
 .crosscheck-source{font-size:10.5px;color:#6f86a5}
 /* Land-cover map key and photo underlay */
 .sat-under{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* Each picture stacks its own layers (photo underneath, map on top) without leaking into the
+   comparison: the swipe's clipped "before" layer must stay above the "after" picture. */
+.sat-image{isolation:isolate}
 .sat-image img:not(.sat-under){position:relative;z-index:1}
+.comparison-image .before-image{z-index:1}
 .lc-legend{position:absolute;left:12px;bottom:12px;z-index:4;max-width:min(62%,460px);display:flex;flex-wrap:wrap;gap:4px 11px;background:#050b1bd9;backdrop-filter:blur(6px);border:1px solid #ffffff1f;border-radius:9px;padding:7px 10px;font-size:10.5px;line-height:1.35;color:#dbe6f3;pointer-events:auto}
 .lc-legend span{display:inline-flex;align-items:center;gap:5px;cursor:default}
 .lc-legend i{width:10px;height:10px;border-radius:2px;flex:none;box-shadow:0 0 0 1px #0006}
