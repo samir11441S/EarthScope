@@ -298,11 +298,32 @@ export default function EarthGlobe({
           vec3 day = texture2D(dayMap, vUv).rgb;
           float ndl = dot(N, L);
           float lit = smoothstep(-0.12, 0.28, ndl);
-          // Cloud shadows follow the drifting clouds, nudged slightly away from the sun.
-          float clouds = cloudAlpha(cloudMap, dayMap, vec2(vUv.x - shift + 0.0015, vUv.y + 0.001)) * cloudShadow;
 
-          // Daylight: lambert + soft ambient so the night side stays readable.
-          vec3 color = day * (0.05 + 1.25 * max(ndl, 0.0)) * (1.0 - 0.35 * clouds);
+          // Ice sheets, sea ice and snow: bright and colourless in Blue Marble. Give them the look of
+          // ice — a cool blue-white with the relief shading brought out — and keep them below cloud
+          // brightness, so ice and clouds never merge into the same flat white.
+          float lum = dot(day, vec3(0.299, 0.587, 0.114));
+          float sat = max(day.r, max(day.g, day.b)) - min(day.r, min(day.g, day.b));
+          float ice = smoothstep(0.58, 0.80, lum) * (1.0 - smoothstep(0.07, 0.16, sat));
+          vec3 iceCol = vec3(0.62, 0.75, 0.90) * clamp(0.82 + 3.0 * (lum - 0.86), 0.5, 1.0);
+          vec3 ground = mix(day, iceCol, ice);
+
+          // Cloud shadows: the cloud deck floats above the ground, so a point's shadow comes from the
+          // cloud toward the sun — far away near sunset, right overhead at noon.
+          vec3 east = normalize(cross(vec3(0.0, 1.0, 0.0), N) + vec3(1e-5, 0.0, 0.0));
+          vec3 north = cross(N, east);
+          float coslat = max(sqrt(1.0 - N.y * N.y), 0.2);
+          float reach = 0.006 / max(ndl, 0.18); // deck height × tan(sun zenith)
+          vec2 toSun = vec2(dot(L, east) * reach / (6.2832 * coslat), dot(L, north) * reach / 3.1416);
+          vec2 cuv = vec2(vUv.x - shift, vUv.y) + toSun;
+          float shadow = (cloudAlpha(cloudMap, dayMap, cuv) * 0.5
+            + cloudAlpha(cloudMap, dayMap, cuv + vec2(0.0012, 0.0)) * 0.25
+            + cloudAlpha(cloudMap, dayMap, cuv - vec2(0.0, 0.0012)) * 0.25) * cloudShadow;
+          float clouds = cloudAlpha(cloudMap, dayMap, vec2(vUv.x - shift, vUv.y)) * cloudShadow;
+
+          // Daylight: lambert + soft ambient so the night side stays readable. The ground peaks below
+          // white; clouds (next shell) are brighter, so they stand out even over ice and deserts.
+          vec3 color = ground * (0.05 + 1.08 * max(ndl, 0.0)) * (1.0 - 0.5 * shadow);
 
           // Oceans (deep blue in Blue Marble) get a sun glint.
           float ocean = smoothstep(0.02, 0.10, day.b - max(day.r, day.g));
@@ -346,16 +367,21 @@ export default function EarthGlobe({
           vec3 N = normalize(vNormalW), V = normalize(vViewW);
           float ndl = dot(N, normalize(sunDir));
           float a = cloudAlpha(cloudMap, dayMap, vec2(vUv.x - shift, vUv.y));
-          vec3 c = vec3(1.0, 0.99, 0.97) * (0.04 + 1.15 * max(ndl, 0.0));
-          c = mix(c, vec3(0.55, 0.75, 1.0), pow(1.0 - max(dot(N, V), 0.0), 2.0) * 0.4);
-          gl_FragColor = vec4(c, a * 0.92 * opacity);
+          // Thick cloud tops are bright and neutral white; thin cloud edges are greyer and more see-through,
+          // which gives the deck depth and keeps it distinct from the bluish ice below.
+          float thick = smoothstep(0.25, 0.95, a);
+          vec3 c = mix(vec3(0.80, 0.82, 0.85), vec3(1.0, 1.0, 0.99), thick) * (0.05 + 1.35 * max(ndl, 0.0));
+          // Warm light on cloud tops near sunset.
+          c *= mix(vec3(1.0, 0.78, 0.6), vec3(1.0), smoothstep(0.0, 0.35, ndl));
+          c = mix(c, vec3(0.55, 0.75, 1.0), pow(1.0 - max(dot(N, V), 0.0), 2.0) * 0.35);
+          gl_FragColor = vec4(c, a * 0.95 * opacity);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
         }`,
       transparent: true,
       depthWrite: false,
     });
-    const cloudSphere = new THREE.Mesh(new THREE.SphereGeometry(1.006, 160, 112), cloudMaterial);
+    const cloudSphere = new THREE.Mesh(new THREE.SphereGeometry(1.008, 160, 112), cloudMaterial);
     scene.add(cloudSphere);
 
     // 2. NASA Climate Anomaly Heatmap Sphere Overlay
