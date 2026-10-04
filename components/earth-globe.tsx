@@ -8,6 +8,13 @@ import { useI18n } from "@/lib/i18n";
 import { cloudDate } from "@/lib/clouds";
 import { getNasaGlobalData, globalWarmingRate, observedRate, SEA_ICE_REFERENCE, type NasaGlobalRecord } from "@/lib/nasa-global-data";
 
+/**
+ * Arctic sea ice for a year: NSIDC September extent (million km²) → the cosine of the colatitude of an
+ * ocean-only polar cap with that area. The Arctic north of ~70°N is about 62% ocean, so the ice edge sits
+ * where 62% of the cap area equals the extent (Earth's half-surface is 255 M km²).
+ */
+const seaIceCos = (extent: number) => 1 - Math.max(0, extent) / (255 * 0.62);
+
 /** Arctic amplification as a ratio of observed warming RATES over the whole record (not of one year's anomalies). */
 const ARCTIC_RATE = observedRate("arcticTempAnomaly"), GLOBAL_RATE = globalWarmingRate();
 const AMPLIFICATION = ARCTIC_RATE.perDecade / GLOBAL_RATE.perDecade;
@@ -281,6 +288,7 @@ export default function EarthGlobe({
       dim: { value: 1 },
       cloudShadow: { value: 1 },
       shift: cloudShift,
+      iceCos: { value: seaIceCos(nasaData.seaIceExtent) },
     };
     const baseMaterial = new THREE.ShaderMaterial({
       uniforms: earthUniforms,
@@ -288,7 +296,7 @@ export default function EarthGlobe({
       fragmentShader: `
         uniform sampler2D dayMap, nightMap, cloudMap;
         uniform vec3 sunDir;
-        uniform float dim, cloudShadow, shift;
+        uniform float dim, cloudShadow, shift, iceCos;
         varying vec2 vUv;
         varying vec3 vNormalW;
         varying vec3 vViewW;
@@ -308,6 +316,16 @@ export default function EarthGlobe({
           vec3 iceCol = vec3(0.62, 0.75, 0.90) * clamp(0.82 + 3.0 * (lum - 0.86), 0.5, 1.0);
           vec3 ground = mix(day, iceCol, ice);
 
+          // Arctic sea ice of the selected year (NSIDC September extent): pack ice over the Arctic Ocean
+          // with a ragged, slightly translucent edge, so moving the year slider shows it grow or shrink.
+          // Ocean, including the very dark deep basins of the bathymetry shading (bluish relative to red/green).
+          float sea = max(smoothstep(0.02, 0.10, day.b - max(day.r, day.g)), step(max(day.r, day.g) * 1.35 + 0.002, day.b) * (1.0 - smoothstep(0.2, 0.4, lum)));
+          float lonA = atan(N.z, -N.x);
+          float wob = 0.0045 * sin(lonA * 3.0 + 1.0) + 0.003 * sin(lonA * 7.0 + 2.3) + 0.0015 * sin(lonA * 17.0 + 0.7);
+          float pack = smoothstep(iceCos - 0.005 + wob, iceCos + 0.006 + wob, N.y) * sea;
+          float floe = 0.9 + 0.1 * sin(lonA * 60.0 + N.y * 400.0) * sin(N.y * 900.0 + lonA * 7.0);
+          ground = mix(ground, vec3(0.70, 0.79, 0.90) * floe, pack * 0.96);
+
           // Cloud shadows: the cloud deck floats above the ground, so a point's shadow comes from the
           // cloud toward the sun — far away near sunset, right overhead at noon.
           vec3 east = normalize(cross(vec3(0.0, 1.0, 0.0), N) + vec3(1e-5, 0.0, 0.0));
@@ -326,7 +344,7 @@ export default function EarthGlobe({
           vec3 color = ground * (0.05 + 1.08 * max(ndl, 0.0)) * (1.0 - 0.5 * shadow);
 
           // Oceans (deep blue in Blue Marble) get a sun glint.
-          float ocean = smoothstep(0.02, 0.10, day.b - max(day.r, day.g));
+          float ocean = smoothstep(0.02, 0.10, day.b - max(day.r, day.g)) * (1.0 - pack);
           vec3 H = normalize(L + V);
           float glint = pow(max(dot(N, H), 0.0), 70.0) * 1.4 + pow(max(dot(N, H), 0.0), 8.0) * 0.08;
           color += vec3(0.75, 0.88, 1.0) * glint * ocean * lit * (1.0 - clouds);
@@ -404,22 +422,7 @@ export default function EarthGlobe({
     anomalySphere.visible = layer !== "Natural color";
     scene.add(anomalySphere);
 
-    // 3. NSIDC / NASA Arctic sea-ice extent cap (shown with the data layers)
-    const iceMaterial = new THREE.MeshBasicMaterial({
-      color: 0xeaf6ff,
-      transparent: true,
-      opacity: 0.6,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      toneMapped: false,
-    });
-    const initialIceTheta = 0.385 * Math.sqrt(Math.max(0.1, nasaData.seaIceExtent) / SEA_ICE_REFERENCE.extent);
-    const seaIceMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(1.009, 64, 20, 0, Math.PI * 2, 0, initialIceTheta),
-      iceMaterial
-    );
-    seaIceMesh.visible = layer !== "Natural color";
-    scene.add(seaIceMesh);
+    // 3. Arctic sea ice is drawn in the ground shader (iceCos), in every layer.
 
     scene.add(camera);
 
@@ -537,22 +540,16 @@ export default function EarthGlobe({
       atmosphereMaterial.uniforms.glow.value.copy(new THREE.Color("#3d8bff").lerp(new THREE.Color("#5aa9ff"), co2Norm));
       atmosphereMaterial.uniforms.density.value = 0.9 + co2Norm * 0.25;
 
-      // 2. Arctic Sea Ice Extent (NSIDC satellite area)
-      const theta = 0.385 * Math.sqrt(Math.max(0.08, rec.seaIceExtent) / SEA_ICE_REFERENCE.extent);
-      const oldGeom = seaIceMesh.geometry;
-      seaIceMesh.geometry = new THREE.SphereGeometry(1.004, 64, 20, 0, Math.PI * 2, 0, theta);
-      oldGeom.dispose();
-      iceMaterial.opacity = Math.max(0.3, Math.min(0.7, 0.3 + (rec.seaIceExtent / SEA_ICE_REFERENCE.extent) * 0.4));
+      // 2. Arctic sea ice of that year (NSIDC September extent; projected after 2025)
+      earthUniforms.iceCos.value = seaIceCos(rec.seaIceExtent);
 
       // 3. Thermal Anomaly Heatmap / Layer
       if (l === "Natural color") {
         anomalySphere.visible = false;
-        seaIceMesh.visible = false;
         earthUniforms.dim.value = 1;
         cloudUniforms.opacity.value = 1;
       } else {
         anomalySphere.visible = true;
-        seaIceMesh.visible = true;
         earthUniforms.dim.value = 0.7;
         cloudUniforms.opacity.value = 0.25;
         if (ctx) {

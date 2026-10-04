@@ -305,6 +305,8 @@ export const BN: Record<string, string> = {
   "Analysed square": "বিশ্লেষিত বর্গক্ষেত্র",
   "Only the outlined area is analysed; the rest of the map is a background picture.": "কেবল রেখা-ঘেরা এলাকাটি বিশ্লেষণ করা হয়েছে; মানচিত্রের বাকিটা শুধু পটভূমির ছবি।",
   "Zoom to analysed area": "বিশ্লেষিত এলাকায় যান",
+  "Arctic sea ice, September {year} (NSIDC)": "আর্কটিক সমুদ্র-বরফ, সেপ্টেম্বর {year} (NSIDC)",
+  "Arctic sea ice, September {year} (trend projection)": "আর্কটিক সমুদ্র-বরফ, সেপ্টেম্বর {year} (প্রবণতাভিত্তিক প্রক্ষেপণ)",
   "This part of EarthScope hit a problem. The rest of the app still works.": "EarthScope-এর এই অংশে একটি সমস্যা হয়েছে। অ্যাপের বাকি অংশ ঠিকঠাক কাজ করছে।",
   "THE EARTH REMEMBERS": "পৃথিবী মনে রাখে",
   "{place}, then and now.": "{place}, তখন আর এখন।",

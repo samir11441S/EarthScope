@@ -75,7 +75,7 @@ export function ExploreView({ place, data, year, setYear, playing, setPlaying, l
         <div className="map-year">{y(year)}<span>{year > RECORD_END ? t("A POSSIBLE FUTURE") : t("A MOMENT IN TIME")}</span></div>
         <EarthGlobe place={place} layer={layer} year={year} onSelect={onSelect}/>
         <div className="map-layer"><Layers3 size={15}/><Select value={layer} onValueChange={v => setLayer(v as Layer)}><SelectTrigger aria-label={t("Earth visualization layer")}><SelectValue>{t(layer)}</SelectValue></SelectTrigger><SelectContent>{LAYERS.map(l => <SelectItem key={l} value={l}>{t(l)}</SelectItem>)}</SelectContent></Select></div>
-        <span className="map-credit">{layer === "Natural color" ? t("NASA Blue Marble · Black Marble · VIIRS clouds") : t("Conceptual color theme · not a measured risk map")}</span>
+        <span className="map-credit">{layer === "Natural color" ? `${t("NASA Blue Marble · Black Marble · VIIRS clouds")} · ${year <= RECORD_END ? t("Arctic sea ice, September {year} (NSIDC)", { year: y(year) }) : t("Arctic sea ice, September {year} (trend projection)", { year: y(year) })}` : t("Conceptual color theme · not a measured risk map")}</span>
         <div className="timeline">
           <div className="timeline-header"><span><History size={14}/> {t("THE TIME MACHINE")}</span><Tabs value={year <= RECORD_END ? "history" : "future"} onValueChange={v => setYear(v === "history" ? RECORD_END : SCENARIO_END)}><TabsList><TabsTrigger value="history">{t("Historical")}</TabsTrigger><TabsTrigger value="future">{t("Future")}</TabsTrigger></TabsList></Tabs></div>
           <div className="timeline-control">
